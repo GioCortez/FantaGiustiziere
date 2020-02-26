@@ -1,12 +1,20 @@
 package org.fanta.corte.datamodel;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Campionato {
 
 	private List<Giornata> giornate;
 	private String hashcode;
+	private BigDecimal homeAdvantage;
+
+	public Campionato(BigDecimal homeAdvantage) {
+		this.homeAdvantage = homeAdvantage;
+	}
 
 	public List<Giornata> getGiornate() {
 		if (giornate == null) {
@@ -38,6 +46,44 @@ public class Campionato {
 			}
 		}
 		return sb.toString();
+	}
+
+	public BigDecimal getHomeAdvantage() {
+		return homeAdvantage;
+	}
+
+	public void setHomeAdvantage(BigDecimal homeAdvantage) {
+		this.homeAdvantage = homeAdvantage;
+	}
+
+	public Map<Player, Integer> calculate() {
+		Map<Player, Integer> classifica = new HashMap<>();
+		for (Giornata g : giornate) {
+			for (Partita p : g.getPartite()) {
+				if (p.getGoalCasa() > p.getGoalTrasf()) {
+					// Home win!
+					addPoints(classifica, p.getCasa(), 3);
+				} else if (p.getGoalTrasf() > p.getGoalCasa()) {
+					// Away win!
+					addPoints(classifica, p.getTrasferta(), 3);
+				} else {
+					// Draw
+					addPoints(classifica, p.getCasa(), 1);
+					addPoints(classifica, p.getTrasferta(), 1);
+				}
+			}
+		}
+		return classifica;
+	}
+
+	private void addPoints(Map<Player, Integer> classifica, Player p, int pointsToAdd) {
+		if (classifica.containsKey(p)) {
+			Integer punti = classifica.get(p);
+			punti = punti + pointsToAdd;
+			classifica.put(p, punti);
+		} else {
+			classifica.put(p, Integer.valueOf(pointsToAdd));
+		}
 	}
 
 }

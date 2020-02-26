@@ -84,7 +84,7 @@ public class ResultsParser {
 
 							Cell result = sheet.getRow(currentRow + i).getCell(currentColumn + 1);
 							BigDecimal homeResult = BigDecimal.valueOf(result.getNumericCellValue());
-							p.getResults().put(giornataNumero, homeResult.subtract(homeAddition));
+							p.addResult(giornataNumero, homeResult.subtract(homeAddition));
 						}
 
 						// iterating "away" results
@@ -102,7 +102,7 @@ public class ResultsParser {
 							}
 
 							Cell result = sheet.getRow(currentRow + i).getCell(currentColumn + 2);
-							p.getResults().put(giornataNumero, BigDecimal.valueOf(result.getNumericCellValue()));
+							p.addResult(giornataNumero, BigDecimal.valueOf(result.getNumericCellValue()));
 						}
 
 					}

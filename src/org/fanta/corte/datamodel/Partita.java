@@ -10,11 +10,13 @@ public class Partita {
 	private BigDecimal punteggioTrasf;
 	private int goalCasa;
 	private int goalTrasf;
+	private final Giornata giornata;
 
-	public Partita(Player casa, Player trasferta) {
+	public Partita(Giornata giornata, Player casa, Player trasferta) {
 		super();
 		this.casa = casa;
 		this.trasferta = trasferta;
+		this.giornata = giornata;
 	}
 
 	public Player getCasa() {
@@ -39,10 +41,10 @@ public class Partita {
 				+ "(" + punteggioTrasf + ")";
 	}
 
-	public void calculate(Integer giornata) {
-		punteggioCasa = casa.getResults().get(giornata);
-		// TODO: add homeAdvantage
-		punteggioTrasf = trasferta.getResults().get(giornata);
+	public void calculate(Integer numeroGiornata) {
+		punteggioCasa = casa.getResults().get(numeroGiornata);
+		punteggioCasa = punteggioCasa.add(giornata.getCampionato().getHomeAdvantage());
+		punteggioTrasf = trasferta.getResults().get(numeroGiornata);
 		goalCasa = getGoals(punteggioCasa);
 		goalTrasf = getGoals(punteggioTrasf);
 	}
@@ -62,11 +64,33 @@ public class Partita {
 			return 5;
 		} else if (punteggio.compareTo(BigDecimal.valueOf(102)) < 0) {
 			return 6;
+		} else if (punteggio.compareTo(BigDecimal.valueOf(108)) < 0) {
+			return 7;
 		} else {
 			throw new IllegalStateException(
 					"Si vabbè quanti cazzi di punti hai fatto in una sola giornata???" + punteggio);
 		}
 
+	}
+
+	public Giornata getGiornata() {
+		return giornata;
+	}
+
+	public int getGoalCasa() {
+		return goalCasa;
+	}
+
+	public void setGoalCasa(int goalCasa) {
+		this.goalCasa = goalCasa;
+	}
+
+	public int getGoalTrasf() {
+		return goalTrasf;
+	}
+
+	public void setGoalTrasf(int goalTrasf) {
+		this.goalTrasf = goalTrasf;
 	}
 
 }

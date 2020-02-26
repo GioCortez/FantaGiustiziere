@@ -9,11 +9,13 @@ public class Player {
 	private String name;
 	private String id;
 	private Map<Integer, BigDecimal> results;
+	private BigDecimal totalPoints;
 
 	public Player(String name, String id) {
 		super();
 		this.name = name;
 		this.id = id;
+		this.totalPoints = BigDecimal.ZERO;
 	}
 
 	public String getName() {
@@ -39,8 +41,22 @@ public class Player {
 		return results;
 	}
 
-	public void setResults(Map<Integer, BigDecimal> results) {
-		this.results = results;
+	public void addResult(Integer numeroPartita, BigDecimal result) {
+		this.getResults().put(numeroPartita, result);
+		totalPoints = totalPoints.add(result);
+	}
+
+	public BigDecimal getTotalPoints() {
+		return totalPoints;
+	}
+
+	public void setTotalPoints(BigDecimal totalPoints) {
+		this.totalPoints = totalPoints;
+	}
+
+	@Override
+	public String toString() {
+		return name;
 	}
 
 }

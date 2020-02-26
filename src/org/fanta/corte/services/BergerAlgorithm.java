@@ -1,6 +1,9 @@
 package org.fanta.corte.services;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -23,9 +26,9 @@ public class BergerAlgorithm {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(BergerAlgorithm.class.getSimpleName());
 
-	public Campionato runAlgoritmoDiBerger2(String[] squadre, Map<String, Player> players) {
+	public Campionato runAlgoritmoDiBerger2(String[] squadre, Map<String, Player> players, BigDecimal homeAdvantage) {
 
-		Campionato calendario = new Campionato();
+		Campionato calendario = new Campionato(homeAdvantage);
 		int totalTeams = squadre.length;
 		int giornate = totalTeams - 1;
 
@@ -37,25 +40,25 @@ public class BergerAlgorithm {
 			casa[i] = squadre[i];
 			trasferta[i] = squadre[totalTeams - 1 - i];
 		}
-
+		int numeroGiornata = 0;
 		for (int i = 0; i < giornate; i++) {
 			/* stampa le partite di questa giornata */
 			LOGGER.debug("{} Giornata", i + 1);
-			Giornata g = new Giornata();
-			int numeroGiornata = i + 1;
+			Giornata g = new Giornata(calendario);
+			numeroGiornata = i + 1;
 			g.setId(numeroGiornata);
 
 			/* alterna le partite in casa e fuori */
 			if (i % 2 == 0) {
 				for (int j = 0; j < totalTeams / 2; j++) {
-					Partita p = new Partita(players.get(trasferta[j]), players.get(casa[j]));
+					Partita p = new Partita(g, players.get(trasferta[j]), players.get(casa[j]));
 					p.calculate(numeroGiornata);
 					g.getPartite().add(p);
 					LOGGER.debug("{}  {}-{}", j + 1, trasferta[j], casa[j]);
 				}
 			} else {
 				for (int j = 0; j < totalTeams / 2; j++) {
-					Partita p = new Partita(players.get(casa[j]), players.get(trasferta[j]));
+					Partita p = new Partita(g, players.get(casa[j]), players.get(trasferta[j]));
 					p.calculate(numeroGiornata);
 					g.getPartite().add(p);
 					LOGGER.debug("{}  {}-{}", j + 1, casa[j], trasferta[j]);
@@ -87,9 +90,26 @@ public class BergerAlgorithm {
 			calendario.getGiornate().add(g);
 
 		}
+
+		Iterator<Giornata> iter = calendario.getGiornate().iterator();
+		List<Giornata> gironeRitorno = new ArrayList<>();
+		while (iter.hasNext()) {
+
+			Giornata g = iter.next();
+			Giornata ritorno = new Giornata(calendario);
+			numeroGiornata++;
+			ritorno.setId(numeroGiornata);
+			for (Partita p : g.getPartite()) {
+				Partita rit = new Partita(ritorno, p.getTrasferta(), p.getCasa());
+				rit.calculate(numeroGiornata);
+				ritorno.getPartite().add(rit);
+			}
+			gironeRitorno.add(ritorno);
+		}
+		calendario.getGiornate().addAll(gironeRitorno);
 		LOGGER.debug("Calculated calendario with {} giornate from ordered list: {}", calendario.getGiornate().size(),
 				squadre);
-		LOGGER.info("{}", calendario);
+		LOGGER.debug("{}", calendario);
 
 		return calendario;
 	}

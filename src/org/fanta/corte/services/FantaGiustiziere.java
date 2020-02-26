@@ -16,6 +16,7 @@ public class FantaGiustiziere {
 	private static final Logger LOGGER = LoggerFactory.getLogger(FantaGiustiziere.class.getSimpleName());
 
 	public static final String SAMPLE_XLSX_FILE_PATH = "c:\\app\\Calendario_XXXI-Fantacalcio-Via-Adda.xlsx";
+	public static final String SAMPLE_XLSX_FILE_PATH2 = "c:\\app\\Calendario_II-Your-best-Fantacalcio.xlsx";
 
 	public static void main(String[] args) {
 
@@ -23,33 +24,23 @@ public class FantaGiustiziere {
 			// Reads excel of "effective results" and parse them into players-results map
 			Instant beforeParsing = Instant.now();
 
-			Map<String, Player> fantaPlayers = ResultsParser.readExcel(SAMPLE_XLSX_FILE_PATH, 12,
-					BigDecimal.valueOf(2));
-
-			// List<String> squadre = Arrays.asList("giorgio", "alberto", "gabriele",
-			// "stefano", "ivan", "riccardo",
-			// "francesco", "fabio", "diego", "pino", "mosta", "sergio");
-
-			// List<String> squadre = Arrays.asList("giorgio", "alberto", "gabriele");
+			BigDecimal homeAdvantage = BigDecimal.valueOf(2);
+			Map<String, Player> fantaPlayers = ResultsParser.readExcel(SAMPLE_XLSX_FILE_PATH2, 10, homeAdvantage);
 
 			Instant afterParsing = Instant.now();
 
 			long timeElapsed = Duration.between(beforeParsing, afterParsing).toMillis() / 1000; // in seconds
 			LOGGER.info("Seconds taken to parse the effective results: {}", timeElapsed);
 
-			CalendarPermutator permutator = new CalendarPermutator(fantaPlayers);
+			CalendarPermutator permutator = new CalendarPermutator(fantaPlayers, homeAdvantage);
 
-			try {
-				permutator.permuteCalendars(3);
-			} catch (IllegalStateException e) {
-				LOGGER.info("Limit have been reached");
-			}
+			long permutationNumber = permutator.permuteCalendars(-1);
 
 			Instant afterPermuting = Instant.now();
 
 			timeElapsed = Duration.between(afterParsing, afterPermuting).toMillis() / 1000; // in seconds
 
-			LOGGER.info("Seconds taken to permute calendars: {}", timeElapsed);
+			LOGGER.info("Seconds taken to permute {} calendars: {}", permutationNumber, timeElapsed);
 
 			// Collections.shuffle(squadre);
 			// for (int i=0; i < 1000; i++) {
