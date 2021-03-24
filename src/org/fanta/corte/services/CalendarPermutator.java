@@ -1,14 +1,18 @@
 package org.fanta.corte.services;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.Comparator;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.stream.Collectors;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.fanta.corte.datamodel.Campionato;
 import org.fanta.corte.datamodel.Player;
 import org.fanta.corte.services.exception.LimitReachedException;
@@ -31,6 +35,8 @@ public class CalendarPermutator {
 	private Map<String, Player> players;
 	private BigDecimal homeAdvantage;
 	private Map<Player, long[]> statistics = new HashMap<>();
+	private long calendarsToPrint = 11;
+	private Map<Player, List<Campionato>> calendarsToBePrinted = new HashMap<>();
 
 	public CalendarPermutator(Map<String, Player> players, BigDecimal homeAdvantage) {
 		resetCounter();
@@ -51,6 +57,8 @@ public class CalendarPermutator {
 		} catch (LimitReachedException e) {
 			LOGGER.info("Limit ({}) have been reached", limit);
 		}
+
+		// Writing absolute and relative statistics for each player
 		for (Entry<Player, long[]> entry : statistics.entrySet()) {
 			long[] totals = entry.getValue();
 			LOGGER.info("Relative Statistics for: {} -> {}", entry.getKey(), entry.getValue());
@@ -60,6 +68,29 @@ public class CalendarPermutator {
 			}
 			LOGGER.info("Percent Statistics for : {} -> {}", entry.getKey(), percent);
 		}
+
+		String filePath = "results" + File.separator;
+		for (Entry<Player, List<Campionato>> entry : calendarsToBePrinted.entrySet()) {
+
+			List<Campionato> campionati = entry.getValue();
+			if (CollectionUtils.isNotEmpty(campionati)) {
+				String filename = filePath + entry.getKey().getName() + ".txt";
+				File f = new File(filename);
+				f.getParentFile().mkdirs();
+				try (BufferedWriter writer = new BufferedWriter(new FileWriter(f))) {
+					for (Campionato c : entry.getValue()) {
+						writer.write("Campionato: ");
+						writer.newLine();
+						writer.write(c.toString());
+						writer.newLine();
+					}
+				} catch (IOException e) {
+					LOGGER.error("An error occurred while writing file {}", e, e);
+				}
+			}
+
+		}
+
 		return permutationCounter;
 	}
 
@@ -88,37 +119,45 @@ public class CalendarPermutator {
 
 		LOGGER.debug("{} -> Calculating calendar from ordered elements: {}", permutationCounter, elements);
 		Campionato c = bergerAlgorithm.runAlgoritmoDiBerger2(elements, players, homeAdvantage);
+
+		// Getting the classifica
 		Map<Player, Integer> classifica = c.calculate();
-		Map<Player, Integer> sortedMap = classifica.entrySet().stream().sorted(new ScoreComparator())
-				.collect(Collectors.toMap(Entry::getKey, Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+
 		int posizione = 0;
-		for (Entry<Player, Integer> entry : sortedMap.entrySet()) {
-			LOGGER.debug("{} ({}) {}", entry.getKey(), entry.getKey().getTotalPoints(), entry.getValue());
+		for (Entry<Player, Integer> entry : classifica.entrySet()) {
 
 			if (!statistics.containsKey(entry.getKey())) {
-				statistics.put(entry.getKey(), new long[12]);
+				// Creating the "positions" array for this player
+				statistics.put(entry.getKey(), new long[classifica.size()]);
 			}
-			long[] posizioni = statistics.get(entry.getKey());
-			posizioni[posizione] = posizioni[posizione] + 1;
-			statistics.put(entry.getKey(), posizioni);
+
+			// Incrementing the position array for this player by 1
+			long[] positions = statistics.get(entry.getKey());
+			long oldNumberOfPositions = positions[posizione];
+			long newNumberOfPositions = oldNumberOfPositions + 1;
+			positions[posizione] = newNumberOfPositions;
+			statistics.put(entry.getKey(), positions);
+
+			if (posizione == 0) {
+				// It's the winner!
+				LOGGER.debug("Winner: {} ({}) {}", entry.getKey(), entry.getKey().getTotalPoints(), entry.getValue());
+				// TODO: Writing the campionato to excel!
+				if (newNumberOfPositions < calendarsToPrint) {
+					if (!calendarsToBePrinted.containsKey(entry.getKey())) {
+						calendarsToBePrinted.put(entry.getKey(), new ArrayList<Campionato>());
+					}
+					calendarsToBePrinted.get(entry.getKey()).add(c);
+				}
+
+			} else {
+				// Loser!
+				LOGGER.debug("{} ({}) {}", entry.getKey(), entry.getKey().getTotalPoints(), entry.getValue());
+			}
+
 			posizione++;
+
 		}
 		permutationCounter++;
-	}
-
-	private class ScoreComparator implements Comparator<Map.Entry<Player, Integer>> {
-
-		@Override
-		public int compare(Entry<Player, Integer> o1, Entry<Player, Integer> o2) {
-			int valueComparison = o2.getValue().compareTo(o1.getValue());
-			if (valueComparison == 0) {
-				// if points comparison is the same, then go with points sum
-				return o2.getKey().getTotalPoints().compareTo(o1.getKey().getTotalPoints());
-			} else {
-				return valueComparison;
-			}
-		}
-
 	}
 
 	private void swap(String[] elements, int i, int j) {

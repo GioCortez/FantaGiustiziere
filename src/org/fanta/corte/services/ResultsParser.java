@@ -71,9 +71,8 @@ public class ResultsParser {
 						// iterating "home" results
 						for (int i = 0; i <= resultRows; i++) {
 
-							String playerName = null;
 							Cell player = sheet.getRow(currentRow + i).getCell(currentColumn);
-							playerName = dataFormatter.formatCellValue(player);
+							String playerName = dataFormatter.formatCellValue(player);
 
 							Player p = fantagiocatori.get(playerName);
 							if (p == null) {

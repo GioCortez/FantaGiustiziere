@@ -17,21 +17,24 @@ public class FantaGiustiziere {
 
 	public static final String SAMPLE_XLSX_FILE_PATH = "c:\\app\\Calendario_XXXI-Fantacalcio-Via-Adda.xlsx";
 	public static final String SAMPLE_XLSX_FILE_PATH2 = "c:\\app\\Calendario_II-Your-best-Fantacalcio.xlsx";
+	public static final String SAMPLE_XLSX_FILE_PATH3 = "c:\\app\\Calendario_XXXII-Fantacalcio-di-via-Adda.xlsx";
 
 	public static void main(String[] args) {
 
 		try {
-			// Reads excel of "effective results" and parse them into players-results map
+			// Step 1: reads excel of "effective results" and parse them into
+			// players-results map
 			Instant beforeParsing = Instant.now();
 
 			BigDecimal homeAdvantage = BigDecimal.valueOf(2);
-			Map<String, Player> fantaPlayers = ResultsParser.readExcel(SAMPLE_XLSX_FILE_PATH2, 10, homeAdvantage);
+			Map<String, Player> fantaPlayers = ResultsParser.readExcel(SAMPLE_XLSX_FILE_PATH3, 12, homeAdvantage);
 
 			Instant afterParsing = Instant.now();
 
 			long timeElapsed = Duration.between(beforeParsing, afterParsing).toMillis() / 1000; // in seconds
 			LOGGER.info("Seconds taken to parse the effective results: {}", timeElapsed);
 
+			// Step 2: permute the possible calendars for the given players-results
 			CalendarPermutator permutator = new CalendarPermutator(fantaPlayers, homeAdvantage);
 
 			long permutationNumber = permutator.permuteCalendars(-1);
@@ -41,11 +44,6 @@ public class FantaGiustiziere {
 			timeElapsed = Duration.between(afterParsing, afterPermuting).toMillis() / 1000; // in seconds
 
 			LOGGER.info("Seconds taken to permute {} calendars: {}", permutationNumber, timeElapsed);
-
-			// Collections.shuffle(squadre);
-			// for (int i=0; i < 1000; i++) {
-			// runAlgoritmoDiBerger2((String[]) squadre.toArray());
-			// }
 
 		} catch (InvalidFormatException | IOException e) {
 			LOGGER.error("An error occurred while parsing the effective results file: {}", e.getMessage(), e);

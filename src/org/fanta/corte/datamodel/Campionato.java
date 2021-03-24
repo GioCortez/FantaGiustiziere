@@ -2,9 +2,13 @@ package org.fanta.corte.datamodel;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 public class Campionato {
 
@@ -73,7 +77,24 @@ public class Campionato {
 				}
 			}
 		}
-		return classifica;
+
+		return classifica.entrySet().stream().sorted(new ScoreComparator())
+				.collect(Collectors.toMap(Entry::getKey, Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+	}
+
+	private class ScoreComparator implements Comparator<Map.Entry<Player, Integer>> {
+
+		@Override
+		public int compare(Entry<Player, Integer> o1, Entry<Player, Integer> o2) {
+			int valueComparison = o2.getValue().compareTo(o1.getValue());
+			if (valueComparison == 0) {
+				// if points comparison is the same, then go with points sum
+				return o2.getKey().getTotalPoints().compareTo(o1.getKey().getTotalPoints());
+			} else {
+				return valueComparison;
+			}
+		}
+
 	}
 
 	private void addPoints(Map<Player, Integer> classifica, Player p, int pointsToAdd) {
