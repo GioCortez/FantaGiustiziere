@@ -68,7 +68,7 @@ public class Partita {
 			return 7;
 		} else {
 			throw new IllegalStateException(
-					"Si vabbè quanti cazzi di punti hai fatto in una sola giornata???" + punteggio);
+					"Si vabbe quanti cazzi di punti hai fatto in una sola giornata???" + punteggio);
 		}
 
 	}
