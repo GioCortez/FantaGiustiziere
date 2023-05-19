@@ -17,7 +17,7 @@ public class FantaGiustiziere {
 
 	public static final String SAMPLE_XLSX_FILE_PATH = "c:\\app\\Calendario_XXXI-Fantacalcio-Via-Adda.xlsx";
 	public static final String SAMPLE_XLSX_FILE_PATH2 = "c:\\app\\Calendario_II-Your-best-Fantacalcio.xlsx";
-	public static final String SAMPLE_XLSX_FILE_PATH3 = "c:\\app\\Calendario_XXXII-Fantacalcio-di-via-Adda.xlsx";
+	public static final String SAMPLE_XLSX_FILE_PATH3 = "C:\\Users\\g.cortesi\\OneDrive - Accenture\\Desktop\\Calendario_Fantacalcio-di-Via-Adda---XXXIV-edizione.xlsx";
 
 	public static void main(String[] args) {
 
