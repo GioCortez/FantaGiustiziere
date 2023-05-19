@@ -1,4 +1,4 @@
-package org.fanta.corte.services;
+package org.fanta.corte;
 
 import java.util.Arrays;
 
