@@ -19,10 +19,18 @@
 	      <plugin>
 	        <groupId>org.springframework.boot</groupId>
 	        <artifactId>spring-boot-maven-plugin</artifactId>
+	        <version>3.0.6</version>
 	        <configuration>
                 <executable>true</executable>
                 <mainClass>org.fanta.corte.services.FantaMain</mainClass> <!-- add your actual main class -->
             </configuration>
+            <executions>
+                <execution>
+                    <goals>
+                        <goal>repackage</goal>
+                    </goals>
+                </execution>
+            </executions>
 	      </plugin>
 	    </plugins>
   	</build>
