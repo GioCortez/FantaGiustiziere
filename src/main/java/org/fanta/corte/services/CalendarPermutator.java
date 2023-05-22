@@ -48,14 +48,14 @@ public class CalendarPermutator {
 		permutationCounter = 0;
 	}
 
-	public int permuteCalendars(int limit) {
+	public int permuteCalendars(long permutationLimits) {
 		resetCounter();
 		Set<String> squadre = players.keySet();
 
 		try {
-			printAllRecursive(squadre.size(), squadre.toArray(new String[0]), limit);
+			printAllRecursive(squadre.size(), squadre.toArray(new String[0]), permutationLimits);
 		} catch (LimitReachedException e) {
-			LOGGER.info("Limit ({}) have been reached", limit);
+			LOGGER.info("Limit ({}) have been reached", permutationLimits);
 		}
 
 		// Writing absolute and relative statistics for each player
@@ -94,24 +94,24 @@ public class CalendarPermutator {
 		return permutationCounter;
 	}
 
-	public void printAllRecursive(int n, String[] elements, int limit) {
+	public void printAllRecursive(int n, String[] elements, long permutationLimits) {
 
 		if (n == 1) {
 			printArray(elements);
-			if (limit > 0 && permutationCounter > limit) {
-				LOGGER.warn("Permutation calculation interrupted since limit {} was reached!", limit);
+			if (permutationLimits > 0 && permutationCounter > permutationLimits) {
+				LOGGER.warn("Permutation calculation interrupted since limit {} was reached!", permutationLimits);
 				throw new LimitReachedException("limit reached!");
 			}
 		} else {
 			for (int i = 0; i < n - 1; i++) {
-				printAllRecursive(n - 1, elements, limit);
+				printAllRecursive(n - 1, elements, permutationLimits);
 				if (n % 2 == 0) {
 					swap(elements, i, n - 1);
 				} else {
 					swap(elements, 0, n - 1);
 				}
 			}
-			printAllRecursive(n - 1, elements, limit);
+			printAllRecursive(n - 1, elements, permutationLimits);
 		}
 	}
 

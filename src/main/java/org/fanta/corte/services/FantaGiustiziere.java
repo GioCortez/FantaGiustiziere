@@ -15,19 +15,15 @@ public class FantaGiustiziere {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(FantaGiustiziere.class.getSimpleName());
 
-	public static final String SAMPLE_XLSX_FILE_PATH = "c:\\app\\Calendario_XXXI-Fantacalcio-Via-Adda.xlsx";
-	public static final String SAMPLE_XLSX_FILE_PATH2 = "c:\\app\\Calendario_II-Your-best-Fantacalcio.xlsx";
-	public static final String SAMPLE_XLSX_FILE_PATH3 = "C:\\Users\\g.cortesi\\OneDrive - Accenture\\Desktop\\Calendario_Fantacalcio-di-Via-Adda---XXXIV-edizione.xlsx";
-
-	public static void main(String[] args) {
+	
+	public static void permuteCalendars(String filePath, int numberOfPlayers, BigDecimal homeAdvantage, long permutationLimits) {
 
 		try {
 			// Step 1: reads excel of "effective results" and parse them into
 			// players-results map
 			Instant beforeParsing = Instant.now();
 
-			BigDecimal homeAdvantage = BigDecimal.valueOf(2);
-			Map<String, Player> fantaPlayers = ResultsParser.readExcel(SAMPLE_XLSX_FILE_PATH3, 12, homeAdvantage);
+			Map<String, Player> fantaPlayers = ResultsParser.readExcel(filePath, numberOfPlayers, homeAdvantage);
 
 			Instant afterParsing = Instant.now();
 
@@ -37,7 +33,7 @@ public class FantaGiustiziere {
 			// Step 2: permute the possible calendars for the given players-results
 			CalendarPermutator permutator = new CalendarPermutator(fantaPlayers, homeAdvantage);
 
-			long permutationNumber = permutator.permuteCalendars(-1);
+			long permutationNumber = permutator.permuteCalendars(permutationLimits);
 
 			Instant afterPermuting = Instant.now();
 
