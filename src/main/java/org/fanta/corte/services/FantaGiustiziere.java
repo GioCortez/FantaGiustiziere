@@ -16,11 +16,17 @@ public class FantaGiustiziere {
 	private static final Logger LOGGER = LoggerFactory.getLogger(FantaGiustiziere.class.getSimpleName());
 
 	
-	public static void permuteCalendars(String filePath, int numberOfPlayers, BigDecimal homeAdvantage, long permutationLimits) {
+        public static void permuteCalendars(String filePath, int numberOfPlayers, BigDecimal homeAdvantage,
+                        long permutationLimits) {
+                permuteCalendars(filePath, numberOfPlayers, homeAdvantage, permutationLimits, true);
+        }
 
-		try {
-			// Step 1: reads excel of "effective results" and parse them into
-			// players-results map
+        public static void permuteCalendars(String filePath, int numberOfPlayers, BigDecimal homeAdvantage,
+                        long permutationLimits, boolean parallelExecution) {
+
+                try {
+                        // Step 1: reads excel of "effective results" and parse them into
+                        // players-results map
 			Instant beforeParsing = Instant.now();
 
 			Map<String, Player> fantaPlayers = ResultsParser.readExcel(filePath, numberOfPlayers, homeAdvantage);
@@ -30,12 +36,12 @@ public class FantaGiustiziere {
 			long timeElapsed = Duration.between(beforeParsing, afterParsing).toMillis() / 1000; // in seconds
 			LOGGER.info("Seconds taken to parse the effective results: {}", timeElapsed);
 
-			// Step 2: permute the possible calendars for the given players-results
-			CalendarPermutator permutator = new CalendarPermutator(fantaPlayers, homeAdvantage);
+                        // Step 2: permute the possible calendars for the given players-results
+                        CalendarPermutator permutator = new CalendarPermutator(fantaPlayers, homeAdvantage);
 
-			long permutationNumber = permutator.permuteCalendars(permutationLimits);
+                        long permutationNumber = permutator.permuteCalendars(permutationLimits, parallelExecution);
 
-			Instant afterPermuting = Instant.now();
+                        Instant afterPermuting = Instant.now();
 
 			timeElapsed = Duration.between(afterParsing, afterPermuting).toMillis() / 1000; // in seconds
 
