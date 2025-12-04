@@ -18,7 +18,6 @@ public class FantaGiustiziere {
     public static void permuteCalendars(String filePath, int numberOfPlayers, BigDecimal homeAdvantage, long permutationLimits) {
 
         try {
-            // Test
             // Step 1: reads excel of "effective results" and parse them into
             // players-results map
             Instant beforeParsing = Instant.now();
