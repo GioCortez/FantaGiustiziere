@@ -6,11 +6,19 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.RecursiveAction;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.LongAdder;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.fanta.corte.datamodel.Campionato;
@@ -30,13 +38,15 @@ public class CalendarPermutator {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(CalendarPermutator.class.getSimpleName());
 
-	private int permutationCounter = 0;
-	private BergerAlgorithm bergerAlgorithm = new BergerAlgorithm();
-	private Map<String, Player> players;
-	private BigDecimal homeAdvantage;
-	private Map<Player, long[]> statistics = new HashMap<>();
-	private long calendarsToPrint = 11;
-	private Map<Player, List<Campionato>> calendarsToBePrinted = new HashMap<>();
+        private final AtomicLong permutationCounter = new AtomicLong();
+        private final BergerAlgorithm bergerAlgorithm = new BergerAlgorithm();
+        private Map<String, Player> players;
+        private BigDecimal homeAdvantage;
+        private final Map<Player, LongAdder[]> statistics = new ConcurrentHashMap<>();
+        private long calendarsToPrint = 11;
+        private final Map<Player, List<Campionato>> calendarsToBePrinted = new ConcurrentHashMap<>();
+        private final AtomicBoolean limitReached = new AtomicBoolean(false);
+        private final int parallelThreshold = 3;
 
 	public CalendarPermutator(Map<String, Player> players, BigDecimal homeAdvantage) {
 		resetCounter();
@@ -45,29 +55,61 @@ public class CalendarPermutator {
 	}
 
 	private void resetCounter() {
-		permutationCounter = 0;
-	}
+                permutationCounter.set(0);
+                statistics.clear();
+                calendarsToBePrinted.clear();
+                limitReached.set(false);
+        }
 
-	public int permuteCalendars(long permutationLimits) {
-		resetCounter();
-		Set<String> squadre = players.keySet();
+        public long permuteCalendars(long permutationLimits) {
+                return permuteCalendars(permutationLimits, true);
+        }
 
-		try {
-			printAllRecursive(squadre.size(), squadre.toArray(new String[0]), permutationLimits);
-		} catch (LimitReachedException e) {
-			LOGGER.info("Limit ({}) have been reached", permutationLimits);
-		}
+        public long permuteCalendars(long permutationLimits, boolean parallelExecution) {
+                resetCounter();
+                Set<String> squadre = players.keySet();
 
-		// Writing absolute and relative statistics for each player
-		for (Entry<Player, long[]> entry : statistics.entrySet()) {
-			long[] totals = entry.getValue();
-			LOGGER.info("Relative Statistics for: {} -> {}", entry.getKey(), entry.getValue());
-			int[] percent = new int[entry.getValue().length];
-			for (int i = 0; i < totals.length; i++) {
-				percent[i] = (int) (totals[i] * 100.0 / permutationCounter + 0.5);
-			}
-			LOGGER.info("Percent Statistics for : {} -> {}", entry.getKey(), percent);
-		}
+                PermutationTask rootTask = new PermutationTask(new ArrayList<>(squadre), new ArrayList<>(),
+                                permutationLimits, parallelExecution);
+
+                if (parallelExecution) {
+                        ForkJoinPool pool = new ForkJoinPool(Math.max(2, Runtime.getRuntime().availableProcessors()));
+                        try {
+                                pool.invoke(rootTask);
+                        } catch (LimitReachedException e) {
+                                LOGGER.info("Limit ({}) have been reached", permutationLimits);
+                        } finally {
+                                pool.shutdown();
+                                try {
+                                        if (!pool.awaitTermination(1, TimeUnit.MINUTES)) {
+                                                pool.shutdownNow();
+                                        }
+                                } catch (InterruptedException e) {
+                                        Thread.currentThread().interrupt();
+                                        LOGGER.warn("Interrupted while awaiting ForkJoinPool termination", e);
+                                }
+                        }
+                } else {
+                        try {
+                                rootTask.compute();
+                        } catch (LimitReachedException e) {
+                                LOGGER.info("Limit ({}) have been reached", permutationLimits);
+                        }
+                }
+
+                // Writing absolute and relative statistics for each player
+                for (Entry<Player, LongAdder[]> entry : statistics.entrySet()) {
+                        long[] totals = Arrays.stream(entry.getValue()).mapToLong(LongAdder::longValue).toArray();
+                        LOGGER.info("Relative Statistics for: {} -> {}", entry.getKey(), Arrays.toString(totals));
+                        int[] percent = new int[entry.getValue().length];
+                        long processed = permutationCounter.get();
+                        if (processed > 0) {
+                                for (int i = 0; i < totals.length; i++) {
+                                        percent[i] = (int) (totals[i] * 100.0 / processed + 0.5);
+                                }
+                        }
+                        LOGGER.info("Percent Statistics for : {} -> {}", entry.getKey(), Arrays.toString(percent));
+                }
 
 		String filePath = "results" + File.separator;
 		for (Entry<Player, List<Campionato>> entry : calendarsToBePrinted.entrySet()) {
@@ -91,81 +133,118 @@ public class CalendarPermutator {
 
 		}
 
-		return permutationCounter;
-	}
+                return permutationCounter.get();
+        }
 
-	public void printAllRecursive(int n, String[] elements, long permutationLimits) {
+        private void processPermutation(List<String> orderedElements, long permutationLimits) {
 
-		if (n == 1) {
-			printArray(elements);
-			if (permutationLimits > 0 && permutationCounter > permutationLimits) {
-				LOGGER.warn("Permutation calculation interrupted since limit {} was reached!", permutationLimits);
-				throw new LimitReachedException("limit reached!");
-			}
-		} else {
-			for (int i = 0; i < n - 1; i++) {
-				printAllRecursive(n - 1, elements, permutationLimits);
-				if (n % 2 == 0) {
-					swap(elements, i, n - 1);
-				} else {
-					swap(elements, 0, n - 1);
-				}
-			}
-			printAllRecursive(n - 1, elements, permutationLimits);
-		}
-	}
+                if (limitReached.get()) {
+                        return;
+                }
 
-	private void printArray(String[] elements) {
+                if (permutationLimits > 0 && permutationCounter.get() >= permutationLimits) {
+                        limitReached.set(true);
+                        return;
+                }
 
-		LOGGER.debug("{} -> Calculating calendar from ordered elements: {}", permutationCounter, elements);
-		Campionato c = bergerAlgorithm.runAlgoritmoDiBerger2(elements, players, homeAdvantage);
+                LOGGER.debug("{} -> Calculating calendar from ordered elements: {}", permutationCounter.get(), orderedElements);
+                Campionato c = bergerAlgorithm.runAlgoritmoDiBerger2(orderedElements.toArray(new String[0]), players,
+                                homeAdvantage);
 
-		// Getting the classifica
-		Map<Player, Integer> classifica = c.calculate();
+                Map<Player, Integer> classifica = c.calculate();
 
-		int posizione = 0;
-		for (Entry<Player, Integer> entry : classifica.entrySet()) {
+                int posizione = 0;
+                for (Entry<Player, Integer> entry : classifica.entrySet()) {
 
-			if (!statistics.containsKey(entry.getKey())) {
-				// Creating the "positions" array for this player
-				statistics.put(entry.getKey(), new long[classifica.size()]);
-			}
+                        LongAdder[] positions = statistics.computeIfAbsent(entry.getKey(),
+                                        key -> buildPositionsArray(classifica.size()));
+                        positions[posizione].increment();
 
-			// Incrementing the position array for this player by 1
-			long[] positions = statistics.get(entry.getKey());
-			long oldNumberOfPositions = positions[posizione];
-			long newNumberOfPositions = oldNumberOfPositions + 1;
-			positions[posizione] = newNumberOfPositions;
-			statistics.put(entry.getKey(), positions);
+                        if (posizione == 0) {
+                                LOGGER.debug("Winner: {} ({}) {}", entry.getKey(), entry.getKey().getTotalPoints(), entry.getValue());
 
-			if (posizione == 0) {
-				// It's the winner!
-				LOGGER.debug("Winner: {} ({}) {}", entry.getKey(), entry.getKey().getTotalPoints(), entry.getValue());
-				// TODO: Writing the campionato to excel!
-				if (newNumberOfPositions < calendarsToPrint) {
-					if (!calendarsToBePrinted.containsKey(entry.getKey())) {
-						calendarsToBePrinted.put(entry.getKey(), new ArrayList<Campionato>());
-					}
-					calendarsToBePrinted.get(entry.getKey()).add(c);
-				}
+                                if (positions[posizione].longValue() <= calendarsToPrint) {
+                                        calendarsToBePrinted.computeIfAbsent(entry.getKey(),
+                                                        key -> Collections.synchronizedList(new ArrayList<>())).add(c);
+                                }
 
-			} else {
-				// Loser!
-				LOGGER.debug("{} ({}) {}", entry.getKey(), entry.getKey().getTotalPoints(), entry.getValue());
-			}
+                        } else {
+                                LOGGER.debug("{} ({}) {}", entry.getKey(), entry.getKey().getTotalPoints(), entry.getValue());
+                        }
 
-			posizione++;
+                        posizione++;
 
-		}
-		permutationCounter++;
-	}
+                }
+                long processed = permutationCounter.incrementAndGet();
 
-	private void swap(String[] elements, int i, int j) {
-		String tmp = elements[i];
-		elements[i] = elements[j];
-		elements[j] = tmp;
+                if (permutationLimits > 0 && processed >= permutationLimits) {
+                        LOGGER.warn("Permutation calculation interrupted since limit {} was reached!", permutationLimits);
+                        limitReached.set(true);
+                        throw new LimitReachedException("limit reached!");
+                }
+        }
 
-	}
+        private LongAdder[] buildPositionsArray(int size) {
+                LongAdder[] adders = new LongAdder[size];
+                for (int i = 0; i < size; i++) {
+                        adders[i] = new LongAdder();
+                }
+                return adders;
+        }
+
+        private class PermutationTask extends RecursiveAction {
+
+                private static final long serialVersionUID = 1L;
+
+                private List<String> remaining;
+                private List<String> currentPermutation;
+                private long permutationLimits;
+                private final boolean parallelExecution;
+
+                public PermutationTask(List<String> remaining, List<String> currentPermutation, long permutationLimits,
+                                boolean parallelExecution) {
+                        this.remaining = remaining;
+                        this.currentPermutation = currentPermutation;
+                        this.permutationLimits = permutationLimits;
+                        this.parallelExecution = parallelExecution;
+                }
+
+                @Override
+                protected void compute() {
+                        if (limitReached.get()) {
+                                return;
+                        }
+
+                        if (remaining.isEmpty()) {
+                                processPermutation(currentPermutation, permutationLimits);
+                                return;
+                        }
+
+                        if (parallelExecution && remaining.size() > parallelThreshold) {
+                                List<PermutationTask> tasks = new ArrayList<>();
+                                for (int i = 0; i < remaining.size(); i++) {
+                                        List<String> nextCurrent = new ArrayList<>(currentPermutation);
+                                        nextCurrent.add(remaining.get(i));
+
+                                        List<String> nextRemaining = new ArrayList<>(remaining);
+                                        nextRemaining.remove(i);
+                                        tasks.add(new PermutationTask(nextRemaining, nextCurrent, permutationLimits,
+                                                        parallelExecution));
+                                }
+                                invokeAll(tasks);
+                        } else {
+                                for (int i = 0; i < remaining.size(); i++) {
+                                        List<String> nextCurrent = new ArrayList<>(currentPermutation);
+                                        nextCurrent.add(remaining.get(i));
+
+                                        List<String> nextRemaining = new ArrayList<>(remaining);
+                                        nextRemaining.remove(i);
+                                        new PermutationTask(nextRemaining, nextCurrent, permutationLimits, parallelExecution)
+                                                        .compute();
+                                }
+                        }
+                }
+        }
 
 	public static void main(String[] args) {
 		long[] array = new long[12];
