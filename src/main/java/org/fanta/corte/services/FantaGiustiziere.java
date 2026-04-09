@@ -15,36 +15,28 @@ public class FantaGiustiziere {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(FantaGiustiziere.class.getSimpleName());
 
-	
-	public static void permuteCalendars(String filePath, int numberOfPlayers, BigDecimal homeAdvantage, long permutationLimits) {
+	public static void permuteCalendars(String filePath, int numberOfPlayers, BigDecimal homeAdvantage,
+			long permutationLimits, int threads) {
 
 		try {
-			// Step 1: reads excel of "effective results" and parse them into
-			// players-results map
 			Instant beforeParsing = Instant.now();
 
 			Map<String, Player> fantaPlayers = ResultsParser.readExcel(filePath, numberOfPlayers, homeAdvantage);
 
-			Instant afterParsing = Instant.now();
-
-			long timeElapsed = Duration.between(beforeParsing, afterParsing).toMillis() / 1000; // in seconds
+			long timeElapsed = Duration.between(beforeParsing, Instant.now()).toMillis() / 1000;
 			LOGGER.info("Seconds taken to parse the effective results: {}", timeElapsed);
 
-			// Step 2: permute the possible calendars for the given players-results
 			CalendarPermutator permutator = new CalendarPermutator(fantaPlayers, homeAdvantage);
 
-			long permutationNumber = permutator.permuteCalendars(permutationLimits);
+			Instant beforePermuting = Instant.now();
+			long permutationNumber = permutator.permuteCalendars(permutationLimits, threads);
 
-			Instant afterPermuting = Instant.now();
-
-			timeElapsed = Duration.between(afterParsing, afterPermuting).toMillis() / 1000; // in seconds
-
+			timeElapsed = Duration.between(beforePermuting, Instant.now()).toMillis() / 1000;
 			LOGGER.info("Seconds taken to permute {} calendars: {}", permutationNumber, timeElapsed);
 
 		} catch (InvalidFormatException | IOException e) {
 			LOGGER.error("An error occurred while parsing the effective results file: {}", e.getMessage(), e);
 		}
-
 	}
 
 }
