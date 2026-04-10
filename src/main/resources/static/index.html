@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FantaGiustiziere</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: transparent; /* field SVG provides the background */
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+
+    /* ── Football pitch ───────────────────────────────────────────── */
+    .field-bg {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: -1;
+    }
+
+    /* ── Layout ───────────────────────────────────────────────────── */
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+    header h1 {
+      font-size: 2.4rem;
+      font-weight: 700;
+      color: #f7c948;
+      letter-spacing: -0.5px;
+      text-shadow: 0 2px 16px rgba(0,0,0,0.7), 0 0 40px rgba(0,0,0,0.5);
+    }
+    header p {
+      color: #cbd5e1;
+      margin-top: 0.4rem;
+      font-size: 0.95rem;
+      text-shadow: 0 1px 6px rgba(0,0,0,0.9);
+    }
+
+    /* Glass cards sitting on the pitch */
+    .card {
+      background: rgba(10, 14, 22, 0.88);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    .section-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #64748b;
+      margin-bottom: 1.25rem;
+    }
+
+    .field {
+      margin-bottom: 1.25rem;
+    }
+    .field label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #cbd5e1;
+      margin-bottom: 0.4rem;
+    }
+    .field small {
+      color: #64748b;
+      font-size: 0.78rem;
+    }
+
+    input[type="file"] {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: rgba(5, 8, 15, 0.75);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      color: #e2e8f0;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    input[type="file"]:hover { border-color: #f7c948; }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 0.65rem 1rem;
+      background: rgba(5, 8, 15, 0.75);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      color: #e2e8f0;
+      font-size: 0.9rem;
+    }
+    input[type="number"]:focus {
+      outline: none;
+      border-color: #f7c948;
+    }
+
+    .radio-group {
+      display: flex;
+      gap: 1rem;
+    }
+    .radio-option {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.75rem 1rem;
+      background: rgba(5, 8, 15, 0.75);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .radio-option:has(input:checked) {
+      border-color: #f7c948;
+      background: rgba(30, 25, 5, 0.85);
+    }
+    .radio-option input[type="radio"] { accent-color: #f7c948; }
+    .radio-option .radio-label { font-size: 0.9rem; }
+    .radio-option .radio-desc { font-size: 0.75rem; color: #64748b; }
+
+    details {
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      padding: 0;
+      margin-top: 0.5rem;
+    }
+    details summary {
+      padding: 0.75rem 1rem;
+      font-size: 0.85rem;
+      color: #94a3b8;
+      cursor: pointer;
+      user-select: none;
+      list-style: none;
+    }
+    details summary::before { content: '▶  '; font-size: 0.65rem; }
+    details[open] summary::before { content: '▼  '; }
+    details[open] .advanced-fields {
+      padding: 1rem;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    .advanced-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .btn-run {
+      width: 100%;
+      padding: 0.9rem;
+      background: #f7c948;
+      color: #0a0e16;
+      font-size: 1rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s, opacity 0.15s;
+      margin-top: 0.5rem;
+    }
+    .btn-run:hover { background: #fad86a; }
+    .btn-run:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Loading */
+    #loading {
+      text-align: center;
+      padding: 2rem;
+      color: #94a3b8;
+      background: rgba(10, 14, 22, 0.88);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 12px;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      margin-bottom: 1.5rem;
+    }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(255,255,255,0.1);
+      border-top-color: #f7c948;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 1rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Error */
+    #error {
+      background: rgba(45, 10, 10, 0.92);
+      border: 1px solid #7f1d1d;
+      color: #fca5a5;
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    /* Results */
+    #results .meta {
+      display: flex;
+      gap: 2rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.875rem;
+      color: #94a3b8;
+    }
+    #results .meta strong { color: #f7c948; font-size: 1.1rem; }
+
+    .table-wrap { overflow-x: auto; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+      min-width: 500px;
+    }
+    thead th {
+      padding: 0.6rem 0.75rem;
+      text-align: center;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #64748b;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      white-space: nowrap;
+    }
+    thead th.col-name { text-align: left; }
+    tbody tr { border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.1s; }
+    tbody tr:hover { background: rgba(255,255,255,0.04); }
+    tbody td { padding: 0.65rem 0.75rem; text-align: center; }
+    tbody td.col-name {
+      text-align: left;
+      font-weight: 600;
+      color: #e2e8f0;
+      white-space: nowrap;
+    }
+
+    .pos-cell { border-radius: 4px; display: inline-block; width: 100%; padding: 0.2rem 0; }
+    .rank-1 { background: rgba(247,201,72,0.18); color: #f7c948; font-weight: 700; }
+    .rank-2 { background: rgba(192,192,192,0.12); color: #cbd5e1; font-weight: 600; }
+    .rank-3 { background: rgba(180,120,60,0.15); color: #c8956c; font-weight: 600; }
+    .rank-other { color: #475569; }
+
+    .pct-bar {
+      display: block;
+      font-size: 0.7rem;
+      margin-top: 1px;
+      color: #475569;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Football pitch background ────────────────────────────────────────── -->
+<!--
+  ViewBox: 1400 × 900 (≈ 16:9, close to the 105×68 m FIFA ratio)
+  Field boundary: 60 px margin all around → rect at (60,60) 1280×780
+  Center: (700, 450)
+-->
+<svg class="field-bg"
+     viewBox="0 0 1400 900"
+     preserveAspectRatio="xMidYMid slice"
+     xmlns="http://www.w3.org/2000/svg"
+     aria-hidden="true">
+
+  <!-- Base grass colour -->
+  <rect width="1400" height="900" fill="#1a6025"/>
+
+  <!-- Mowing stripes: alternating vertical bands every 70 px -->
+  <defs>
+    <pattern id="mow" x="0" y="0" width="140" height="900" patternUnits="userSpaceOnUse">
+      <rect x="0" y="0" width="70" height="900" fill="rgba(0,0,0,0.07)"/>
+    </pattern>
+  </defs>
+  <rect width="1400" height="900" fill="url(#mow)"/>
+
+  <!-- Field markings – all white at 30 % opacity so they read but don't glare -->
+  <g fill="none" stroke="rgba(255,255,255,0.30)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+
+    <!-- Outer boundary -->
+    <rect x="60" y="60" width="1280" height="780"/>
+
+    <!-- Halfway line -->
+    <line x1="700" y1="60" x2="700" y2="840"/>
+
+    <!-- Center circle  (r = 9.15 m → ~111 px at this scale) -->
+    <circle cx="700" cy="450" r="110"/>
+
+    <!-- Left penalty area  (16.5 m deep × 40.32 m wide → 200 × 462 px) -->
+    <rect x="60" y="219" width="200" height="462"/>
+    <!-- Left goal area  (5.5 m deep × 18.32 m wide → 67 × 210 px) -->
+    <rect x="60" y="345" width="67" height="210"/>
+
+    <!-- Right penalty area -->
+    <rect x="1140" y="219" width="200" height="462"/>
+    <!-- Right goal area -->
+    <rect x="1273" y="345" width="67" height="210"/>
+
+    <!--
+      Penalty arcs – the arc of the 9.15 m circle (r≈110 px) centred on each
+      penalty spot that falls *outside* the penalty area.
+
+      Left spot: (194, 450).  Circle hits x=260 at y = 450 ± 88.
+      Right spot: (1206, 450).  Circle hits x=1140 at y = 450 ± 88.
+    -->
+    <path d="M 260 362 A 110 110 0 0 1 260 538"/>
+    <path d="M 1140 538 A 110 110 0 0 1 1140 362"/>
+
+    <!-- Corner arcs (r = 20 px, curving into the field) -->
+    <path d="M 80 60  A 20 20 0 0 1 60 80"/>
+    <path d="M 1320 60 A 20 20 0 0 0 1340 80"/>
+    <path d="M 60 820 A 20 20 0 0 1 80 840"/>
+    <path d="M 1320 840 A 20 20 0 0 1 1340 820"/>
+  </g>
+
+  <!-- Filled spots -->
+  <g fill="rgba(255,255,255,0.30)">
+    <!-- Centre spot -->
+    <circle cx="700"  cy="450" r="5"/>
+    <!-- Penalty spots  (11 m from goal line → ~134 px) -->
+    <circle cx="194"  cy="450" r="5"/>
+    <circle cx="1206" cy="450" r="5"/>
+  </g>
+</svg>
+
+<!-- ── Page content ──────────────────────────────────────────────────────── -->
+<div class="container">
+  <header>
+    <h1>⚽ FantaGiustiziere</h1>
+    <p>Ottimizzatore del calendario del Fantacalcio</p>
+  </header>
+
+  <div class="card">
+    <p class="section-title">Configurazione</p>
+    <form id="runForm">
+
+      <div class="field">
+        <label>File risultati (.xlsx)</label>
+        <input type="file" name="file" accept=".xlsx,.xls" required>
+      </div>
+
+      <div class="field">
+        <label>Modalità di esecuzione</label>
+        <div class="radio-group">
+          <label class="radio-option">
+            <input type="radio" name="threads" value="1">
+            <div>
+              <div class="radio-label">Monothread</div>
+              <div class="radio-desc">Singolo core, risultato deterministico</div>
+            </div>
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="threads" value="-1" checked>
+            <div>
+              <div class="radio-label">Multithread</div>
+              <div class="radio-desc">Tutti i core disponibili, più veloce</div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Limite permutazioni <small>— 0 = illimitato (può richiedere molto tempo)</small></label>
+        <input type="number" name="permutationLimit" value="5000" min="0" step="1000">
+      </div>
+
+      <details>
+        <summary>Impostazioni avanzate</summary>
+        <div class="advanced-fields">
+          <div class="advanced-grid">
+            <div class="field">
+              <label>Numero di giocatori</label>
+              <input type="number" name="players" value="12" min="2" max="20" step="2">
+            </div>
+            <div class="field">
+              <label>Vantaggio casa (punti)</label>
+              <input type="number" name="homeAdvantage" value="2" min="0" max="10" step="0.5">
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <button type="submit" class="btn-run">Avvia calcolo</button>
+    </form>
+  </div>
+
+  <div id="loading" hidden>
+    <div class="spinner"></div>
+    <div>Calcolo in corso…</div>
+    <div style="font-size:0.8rem;margin-top:0.4rem;color:#475569">Con tante permutazioni può volerci qualche minuto</div>
+  </div>
+
+  <div id="error" hidden></div>
+
+  <div id="results" hidden>
+    <div class="card">
+      <p class="section-title">Risultati</p>
+      <div class="meta">
+        <div>Permutazioni calcolate: <strong id="permCount">—</strong></div>
+        <div>Giocatori: <strong id="playerCount">—</strong></div>
+      </div>
+      <div class="table-wrap">
+        <table id="statsTable"></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const form = document.getElementById('runForm');
+  const loading = document.getElementById('loading');
+  const errorBox = document.getElementById('error');
+  const results = document.getElementById('results');
+  const submitBtn = form.querySelector('.btn-run');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    loading.hidden = false;
+    errorBox.hidden = true;
+    results.hidden = true;
+    submitBtn.disabled = true;
+
+    try {
+      const resp = await fetch('/run', { method: 'POST', body: new FormData(form) });
+      if (!resp.ok) {
+        throw new Error(await resp.text() || `Errore HTTP ${resp.status}`);
+      }
+      renderResults(await resp.json());
+    } catch (err) {
+      errorBox.textContent = 'Errore: ' + err.message;
+      errorBox.hidden = false;
+    } finally {
+      loading.hidden = true;
+      submitBtn.disabled = false;
+    }
+  });
+
+  function renderResults(data) {
+    document.getElementById('permCount').textContent = data.permutationCount.toLocaleString('it-IT');
+    document.getElementById('playerCount').textContent = data.statistics.length;
+
+    const n = data.statistics[0]?.positions.length ?? 0;
+
+    // Header
+    let html = '<thead><tr><th class="col-name">Giocatore</th>';
+    for (let i = 0; i < n; i++) html += `<th>${i + 1}°</th>`;
+    html += '</tr></thead><tbody>';
+
+    // Rows — already sorted by 1st-place count descending from the server
+    for (const s of data.statistics) {
+      html += `<tr><td class="col-name">${esc(s.player)}</td>`;
+      for (let i = 0; i < n; i++) {
+        const pct = s.percentages[i];
+        const count = s.positions[i];
+        const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : 'rank-other';
+        html += `<td title="${count.toLocaleString('it-IT')} permutazioni">` +
+                `<span class="pos-cell ${rankClass}">${pct}%` +
+                `<span class="pct-bar">${count.toLocaleString('it-IT')}</span></span></td>`;
+      }
+      html += '</tr>';
+    }
+    html += '</tbody>';
+
+    document.getElementById('statsTable').innerHTML = html;
+    results.hidden = false;
+    results.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function esc(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+</script>
+</body>
+</html>
