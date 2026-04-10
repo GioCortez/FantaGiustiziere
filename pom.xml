@@ -11,13 +11,15 @@
 	<groupId>FantaGiustiziere</groupId>
 	<artifactId>FantaGiustiziere</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<properties>
-		<java.version>17</java.version>
-	</properties>
+    <properties>
+        <java.version>17</java.version>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+    </properties>
 	<build>
 		<resources>
 	        <resource>
-	          <directory>src/main/java</directory>
+	          <directory>src/main/resources</directory>
 	        </resource>
       	</resources>
 	    <plugins>
