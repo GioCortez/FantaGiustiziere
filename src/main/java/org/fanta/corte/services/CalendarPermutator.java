@@ -58,20 +58,28 @@ public class CalendarPermutator {
 	 * @param threads           1 = single-thread; -1 = auto (availableProcessors); N > 1 = fixed pool
 	 */
 	public int permuteCalendars(long permutationLimits, int threads) {
-		String[] originalElements = players.keySet().toArray(new String[0]);
-		int n = originalElements.length;
-
-		PartialResult finalResult;
-
-		if (threads == 1) {
-			finalResult = runSingleThread(originalElements, n, permutationLimits);
-		} else {
-			finalResult = runMultiThread(originalElements, n, permutationLimits, threads);
-		}
-
+		PartialResult finalResult = computePermutations(permutationLimits, threads);
 		logStatistics(finalResult, permutationLimits);
 		writeResultFiles(finalResult);
 		return finalResult.permutationCounter;
+	}
+
+	/**
+	 * Runs the permutation and returns the raw result without any I/O side effects.
+	 * Useful for testing and for callers that need the statistics directly.
+	 *
+	 * @param permutationLimits max permutations to process (0 = unlimited)
+	 * @param threads           1 = single-thread; -1 = auto (availableProcessors); N > 1 = fixed pool
+	 */
+	public PartialResult computePermutations(long permutationLimits, int threads) {
+		String[] originalElements = players.keySet().toArray(new String[0]);
+		int n = originalElements.length;
+
+		if (threads == 1) {
+			return runSingleThread(originalElements, n, permutationLimits);
+		} else {
+			return runMultiThread(originalElements, n, permutationLimits, threads);
+		}
 	}
 
 	// -------------------------------------------------------------------------
