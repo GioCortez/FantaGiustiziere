@@ -15,6 +15,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.fanta.corte.datamodel.Campionato;
@@ -88,8 +89,9 @@ public class CalendarPermutator {
 
 	private PartialResult runSingleThread(String[] elements, int n, long limit) {
 		PartialResult result = new PartialResult();
+		AtomicLong globalLimit = limit > 0 ? new AtomicLong(limit) : null;
 		try {
-			printAllRecursive(n, elements, 0, limit, result);
+			printAllRecursive(n, elements, 0, globalLimit, result);
 		} catch (LimitReachedException e) {
 			LOGGER.info("Limit ({}) reached", limit);
 		}
@@ -104,12 +106,12 @@ public class CalendarPermutator {
 		int actualThreads = resolveThreadCount(threads, n);
 		LOGGER.info("Running with {} threads ({} partitions)", actualThreads, n);
 
+		// One shared counter for all partitions: when any thread decrements it to zero,
+		// all threads stop. This makes the limit a true global cap rather than a per-thread one.
+		AtomicLong globalLimit = limit > 0 ? new AtomicLong(limit) : null;
+
 		ExecutorService executor = Executors.newFixedThreadPool(actualThreads);
 		List<Future<PartialResult>> futures = new ArrayList<>();
-
-		// Split the global limit evenly across the n partitions so the total number of
-		// processed permutations stays close to the requested limit (0 = unlimited).
-		long limitPerPartition = limit > 0 ? Math.max(1, limit / n) : 0;
 
 		// Partitioning strategy: fix one distinct player at position 0 per partition.
 		// Each partition then permutes the remaining n-1 positions independently,
@@ -118,16 +120,15 @@ public class CalendarPermutator {
 			String[] seed = originalElements.clone();
 			// Bring player i to index 0; the rest of the array keeps its relative order.
 			swap(seed, 0, i);
-			final long taskLimit = limitPerPartition;
 			final String[] taskElements = seed;
 			futures.add(executor.submit(() -> {
 				// Each task gets its own PartialResult — no shared mutable state, no locks needed.
 				PartialResult result = new PartialResult();
 				try {
 					// offset=1: Heap's algorithm operates on indices [1..n-1], leaving index 0 fixed.
-					printAllRecursive(n - 1, taskElements, 1, taskLimit, result);
+					printAllRecursive(n - 1, taskElements, 1, globalLimit, result);
 				} catch (LimitReachedException e) {
-					// Normal exit path when a per-partition limit is set.
+					// Normal exit path when the global limit is reached.
 				}
 				return result;
 			}));
@@ -193,6 +194,17 @@ public class CalendarPermutator {
 	 * Heap's algorithm — generates all permutations of elements[offset..offset+n-1]
 	 * in-place, leaving elements[0..offset-1] untouched.
 	 *
+	 * <p>Public wrapper kept for test compatibility; wraps {@code limit} in an
+	 * {@link AtomicLong} and delegates to the internal implementation.
+	 */
+	public void printAllRecursive(int n, String[] elements, int offset, long limit, PartialResult result) {
+		AtomicLong globalLimit = limit > 0 ? new AtomicLong(limit) : null;
+		printAllRecursive(n, elements, offset, globalLimit, result);
+	}
+
+	/**
+	 * Internal Heap's algorithm implementation.
+	 *
 	 * <p>The {@code offset} parameter is the key addition for multi-threading:
 	 * <ul>
 	 *   <li>offset=0 — classic behaviour, permutes the whole array (single-thread path).</li>
@@ -200,16 +212,19 @@ public class CalendarPermutator {
 	 *       "partition anchor" chosen by the caller (multi-thread path).</li>
 	 * </ul>
 	 * Swaps are adjusted by {@code offset} so they always target the active sub-array.
+	 *
+	 * <p>{@code globalLimit} is shared across threads in the multi-thread path, making
+	 * the limit a true global cap. {@code null} means unlimited.
 	 */
-	public void printAllRecursive(int n, String[] elements, int offset, long limit, PartialResult result) {
+	private void printAllRecursive(int n, String[] elements, int offset, AtomicLong globalLimit, PartialResult result) {
 		if (n == 1) {
 			processPermutation(elements, result);
-			if (limit > 0 && result.permutationCounter >= limit) {
+			if (globalLimit != null && globalLimit.decrementAndGet() <= 0) {
 				throw new LimitReachedException("limit reached!");
 			}
 		} else {
 			for (int i = 0; i < n - 1; i++) {
-				printAllRecursive(n - 1, elements, offset, limit, result);
+				printAllRecursive(n - 1, elements, offset, globalLimit, result);
 				// Heap's swap rule: when n is even rotate element i out; when n is odd always
 				// rotate element at the start of the active sub-array (index offset+0).
 				if (n % 2 == 0) {
@@ -218,7 +233,7 @@ public class CalendarPermutator {
 					swap(elements, offset, offset + n - 1);
 				}
 			}
-			printAllRecursive(n - 1, elements, offset, limit, result);
+			printAllRecursive(n - 1, elements, offset, globalLimit, result);
 		}
 	}
 
