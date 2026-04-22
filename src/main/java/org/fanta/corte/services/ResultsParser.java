@@ -24,8 +24,6 @@ import org.slf4j.LoggerFactory;
 public class ResultsParser {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ResultsParser.class.getSimpleName());
-	public static final String SAMPLE_XLSX_FILE_PATH = "c:\\app\\Calendario_XXXI-Fantacalcio-Via-Adda.xlsx";
-
 	private static final String REGEX = "[\\d]+";
 	private static final Pattern DAYTITLEPATTERN = Pattern.compile(REGEX, Pattern.MULTILINE);
 
@@ -122,7 +120,4 @@ public class ResultsParser {
 
 	}
 
-	public static void main(String[] args) throws IOException, InvalidFormatException {
-		readExcel(SAMPLE_XLSX_FILE_PATH, 12, BigDecimal.valueOf(2));
-	}
 }

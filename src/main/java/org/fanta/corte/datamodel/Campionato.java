@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 public class Campionato {
 
 	private List<Giornata> giornate;
-	private String hashcode;
 	private BigDecimal homeAdvantage;
 
 	public Campionato(BigDecimal homeAdvantage) {
@@ -29,14 +28,6 @@ public class Campionato {
 
 	public void setGiornate(List<Giornata> giornate) {
 		this.giornate = giornate;
-	}
-
-	public String getHashcode() {
-		return hashcode;
-	}
-
-	public void setHashcode(String hashcode) {
-		this.hashcode = hashcode;
 	}
 
 	@Override

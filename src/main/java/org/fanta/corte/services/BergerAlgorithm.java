@@ -2,7 +2,6 @@ package org.fanta.corte.services;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -132,14 +131,4 @@ public class BergerAlgorithm {
 		return temp;
 	}
 
-	public static void main(String[] args) {
-		List<String> squadre = Arrays.asList("giorgio", "alberto", "gabriele", "stefano", "ivan", "riccardo",
-				"francesco", "fabio", "diego", "pino", "mosta", "sergio");
-
-//		BergerAlgorithm b = new BergerAlgorithm();
-//		for (int i = 0; i < 3; i++) {
-//			Collections.shuffle(squadre);
-//			b.runAlgoritmoDiBerger2((String[]) squadre.toArray());
-//		}
-	}
 }
