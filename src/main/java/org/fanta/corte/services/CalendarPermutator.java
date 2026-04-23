@@ -39,10 +39,24 @@ public class CalendarPermutator {
 	private final Map<String, Player> players;
 	private final BigDecimal homeAdvantage;
 	private final long calendarsToPrint = 11;
+	private final int totalLegs;
+	private final int legsWithAdvantage;
 
 	public CalendarPermutator(Map<String, Player> players, BigDecimal homeAdvantage) {
 		this.players = players;
 		this.homeAdvantage = homeAdvantage;
+
+		int maxGiornata = players.values().stream()
+				.flatMap(p -> p.getResults().keySet().stream())
+				.mapToInt(Integer::intValue)
+				.max().orElse(0);
+		int legSize = players.size() > 1 ? players.size() - 1 : 1;
+		this.totalLegs = maxGiornata > 0 ? (int) Math.ceil((double) maxGiornata / legSize) : 2;
+		// Odd number of legs → the surplus last leg is neutral (no home advantage).
+		// Even number of legs (or a single leg) → all legs have home advantage.
+		this.legsWithAdvantage = (totalLegs <= 1 || totalLegs % 2 == 0) ? totalLegs : totalLegs - 1;
+		LOGGER.info("Season structure: {} players, {} matchdays → {} legs ({} with home advantage, {} neutral)",
+				players.size(), maxGiornata, totalLegs, legsWithAdvantage, totalLegs - legsWithAdvantage);
 	}
 
 	// -------------------------------------------------------------------------
@@ -239,7 +253,7 @@ public class CalendarPermutator {
 
 	private void processPermutation(String[] elements, PartialResult result) {
 		LOGGER.debug("{} -> Calculating calendar from ordered elements: {}", result.permutationCounter, elements);
-		Campionato c = bergerAlgorithm.runAlgoritmoDiBerger2(elements, players, homeAdvantage);
+		Campionato c = bergerAlgorithm.runAlgoritmoDiBerger2(elements, players, homeAdvantage, totalLegs, legsWithAdvantage);
 		Map<Player, Integer> classifica = c.calculate();
 
 		int posizione = 0;

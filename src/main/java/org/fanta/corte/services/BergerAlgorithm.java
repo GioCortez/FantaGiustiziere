@@ -2,7 +2,6 @@ package org.fanta.corte.services;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -14,103 +13,101 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This class is used to calculate the calendar based on the berger algorithm.
- * Main method takes a list of string as input and output a "Campionato" object,
- * which is the POJO representation of a calendar
- * 
- * @author g.cortesi
- *
+ * Generates a round-robin calendar using the Berger algorithm.
+ * Supports an arbitrary number of legs; legs beyond {@code legsWithAdvantage}
+ * are marked as neutral (no home-field bonus is applied to either team).
  */
 public class BergerAlgorithm {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(BergerAlgorithm.class.getSimpleName());
 
-	public Campionato runAlgoritmoDiBerger2(String[] squadre, Map<String, Player> players, BigDecimal homeAdvantage) {
+	/**
+	 * @param squadre           player names in the permuted order
+	 * @param players           player lookup map (name → Player)
+	 * @param homeAdvantage     points added to the home team's score on non-neutral matchdays
+	 * @param totalLegs         total number of legs to generate
+	 * @param legsWithAdvantage number of legs (from leg 0 onwards) that have home advantage;
+	 *                          the remaining legs are neutral
+	 */
+	public Campionato runAlgoritmoDiBerger2(String[] squadre, Map<String, Player> players,
+			BigDecimal homeAdvantage, int totalLegs, int legsWithAdvantage) {
 
 		Campionato calendario = new Campionato(homeAdvantage);
 		int totalTeams = squadre.length;
-		int giornate = totalTeams - 1;
+		int legSize = totalTeams - 1;
 
-		/* crea gli array per le due liste in casa e fuori */
+		// ── Leg 0: first Berger pass ──────────────────────────────────────────
 		String[] casa = new String[totalTeams / 2];
 		String[] trasferta = new String[totalTeams / 2];
-
 		for (int i = 0; i < totalTeams / 2; i++) {
 			casa[i] = squadre[i];
 			trasferta[i] = squadre[totalTeams - 1 - i];
 		}
-		int numeroGiornata = 0;
-		for (int i = 0; i < giornate; i++) {
-			/* stampa le partite di questa giornata */
-			LOGGER.debug("{} Giornata", i + 1);
-			Giornata g = new Giornata(calendario);
-			numeroGiornata = i + 1;
-			g.setId(numeroGiornata);
 
-			/* alterna le partite in casa e fuori */
+		List<Giornata> leg0 = new ArrayList<>();
+		int nextId = 0;
+
+		for (int i = 0; i < legSize; i++) {
+			nextId++;
+			Giornata g = new Giornata(calendario);
+			g.setId(nextId);
+			// Leg 0 is never neutral (legsWithAdvantage >= 1 for all valid seasons)
+
 			if (i % 2 == 0) {
 				for (int j = 0; j < totalTeams / 2; j++) {
-					Partita p = new Partita(g, players.get(trasferta[j]), players.get(casa[j]));
-					p.calculate(numeroGiornata);
-					g.getPartite().add(p);
-					LOGGER.debug("{}  {}-{}", j + 1, trasferta[j], casa[j]);
+					addPartita(g, players.get(trasferta[j]), players.get(casa[j]), nextId);
+					LOGGER.debug("g{}: {} vs {}", nextId, trasferta[j], casa[j]);
 				}
 			} else {
 				for (int j = 0; j < totalTeams / 2; j++) {
-					Partita p = new Partita(g, players.get(casa[j]), players.get(trasferta[j]));
-					p.calculate(numeroGiornata);
-					g.getPartite().add(p);
-					LOGGER.debug("{}  {}-{}", j + 1, casa[j], trasferta[j]);
+					addPartita(g, players.get(casa[j]), players.get(trasferta[j]), nextId);
+					LOGGER.debug("g{}: {} vs {}", nextId, casa[j], trasferta[j]);
 				}
 			}
 
-			// Ruota in gli elementi delle liste, tenendo fisso il primo elemento
-			// Salva l'elemento fisso
+			// Berger rotation: keep casa[0] (the "fixed" team) in place, rotate the rest
 			String pivot = casa[0];
-
-			/*
-			 * sposta in avanti gli elementi di "trasferta" inserendo all'inizio l'elemento
-			 * casa[1] e salva l'elemento uscente in "riporto"
-			 */
-
 			String riporto = trasferta[trasferta.length - 1];
 			trasferta = shiftRight(trasferta, casa[1]);
-
-			/*
-			 * sposta a sinistra gli elementi di "casa" inserendo all'ultimo posto
-			 * l'elemento "riporto"
-			 */
-
 			casa = shiftLeft(casa, riporto);
-
-			// ripristina l'elemento fisso
 			casa[0] = pivot;
 
+			leg0.add(g);
 			calendario.getGiornate().add(g);
-
 		}
 
-		Iterator<Giornata> iter = calendario.getGiornate().iterator();
-		List<Giornata> gironeRitorno = new ArrayList<>();
-		while (iter.hasNext()) {
+		// ── Legs 1 … totalLegs−1 ─────────────────────────────────────────────
+		// Odd legs are the "return" fixtures (home/away swapped vs leg 0).
+		// Even legs ≥ 2 repeat leg 0's home/away assignments.
+		// Legs whose index ≥ legsWithAdvantage are neutral (no home bonus).
+		for (int legIdx = 1; legIdx < totalLegs; legIdx++) {
+			boolean isNeutral = legIdx >= legsWithAdvantage;
+			boolean returnLeg = (legIdx % 2 == 1);
 
-			Giornata g = iter.next();
-			Giornata ritorno = new Giornata(calendario);
-			numeroGiornata++;
-			ritorno.setId(numeroGiornata);
-			for (Partita p : g.getPartite()) {
-				Partita rit = new Partita(ritorno, p.getTrasferta(), p.getCasa());
-				rit.calculate(numeroGiornata);
-				ritorno.getPartite().add(rit);
+			for (Giornata source : leg0) {
+				nextId++;
+				Giornata g = new Giornata(calendario);
+				g.setId(nextId);
+				g.setNeutral(isNeutral);
+
+				for (Partita p : source.getPartite()) {
+					Player home = returnLeg ? p.getTrasferta() : p.getCasa();
+					Player away = returnLeg ? p.getCasa()      : p.getTrasferta();
+					addPartita(g, home, away, nextId);
+				}
+				calendario.getGiornate().add(g);
 			}
-			gironeRitorno.add(ritorno);
 		}
-		calendario.getGiornate().addAll(gironeRitorno);
-		LOGGER.debug("Calculated calendario with {} giornate from ordered list: {}", calendario.getGiornate().size(),
-				squadre);
-		LOGGER.debug("{}", calendario);
 
+		LOGGER.debug("Generated calendar: {} giornate, {} legs ({} with home advantage) from: {}",
+				calendario.getGiornate().size(), totalLegs, legsWithAdvantage, squadre);
 		return calendario;
+	}
+
+	private void addPartita(Giornata g, Player home, Player away, int giornataId) {
+		Partita p = new Partita(g, home, away);
+		p.calculate(giornataId);
+		g.getPartite().add(p);
 	}
 
 	private String[] shiftLeft(String[] data, String add) {

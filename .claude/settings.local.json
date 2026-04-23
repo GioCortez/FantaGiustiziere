@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "WebFetch(domain:leghe.fantacalcio.it)",
-      "Bash(mvn compile:*)"
+      "Bash(mvn compile:*)",
+      "WebSearch"
     ]
   }
 }

@@ -8,6 +8,7 @@ public class Giornata {
 	private int id;
 	private List<Partita> partite;
 	private final Campionato campionato;
+	private boolean neutral;
 
 	public Giornata(Campionato campionato) {
 		super();
@@ -35,5 +36,13 @@ public class Giornata {
 
 	public Campionato getCampionato() {
 		return campionato;
+	}
+
+	public boolean isNeutral() {
+		return neutral;
+	}
+
+	public void setNeutral(boolean neutral) {
+		this.neutral = neutral;
 	}
 }

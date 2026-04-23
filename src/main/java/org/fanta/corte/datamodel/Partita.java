@@ -43,13 +43,15 @@ public class Partita {
 
 	public void calculate(Integer numeroGiornata) {
 		punteggioCasa = casa.getResults().get(numeroGiornata);
-		punteggioCasa = punteggioCasa.add(giornata.getCampionato().getHomeAdvantage());
+		if (!giornata.isNeutral()) {
+			punteggioCasa = punteggioCasa.add(giornata.getCampionato().getHomeAdvantage());
+		}
 		punteggioTrasf = trasferta.getResults().get(numeroGiornata);
 		goalCasa = getGoals(punteggioCasa);
 		goalTrasf = getGoals(punteggioTrasf);
 	}
 
-	public int getGoals(BigDecimal punteggio) {
+	public static int getGoals(BigDecimal punteggio) {
 		if (punteggio.compareTo(BigDecimal.valueOf(66)) < 0) {
 			return 0;
 		} else if (punteggio.compareTo(BigDecimal.valueOf(72)) < 0) {

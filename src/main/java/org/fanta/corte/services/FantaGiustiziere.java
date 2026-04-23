@@ -21,7 +21,7 @@ public class FantaGiustiziere {
 		try {
 			Instant beforeParsing = Instant.now();
 
-			Map<String, Player> fantaPlayers = ResultsParser.readExcel(filePath, numberOfPlayers, homeAdvantage);
+			Map<String, Player> fantaPlayers = ResultsParser.readExcel(filePath, numberOfPlayers, homeAdvantage, false);
 
 			long timeElapsed = Duration.between(beforeParsing, Instant.now()).toMillis() / 1000;
 			LOGGER.info("Seconds taken to parse the effective results: {}", timeElapsed);
