@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.0.6</version>
+		<version>3.5.14</version>
 	</parent>
 	<groupId>FantaGiustiziere</groupId>
 	<artifactId>FantaGiustiziere</artifactId>
@@ -42,12 +42,12 @@
 		<dependency>
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi</artifactId>
-			<version>5.2.3</version>
+			<version>5.4.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi-ooxml</artifactId>
-			<version>5.2.3</version>
+			<version>5.4.0</version>
 		</dependency>
 		<dependency>
 		   <groupId>org.apache.logging.log4j</groupId>

@@ -3,7 +3,9 @@
     "allow": [
       "WebFetch(domain:leghe.fantacalcio.it)",
       "Bash(mvn compile:*)",
-      "WebSearch"
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:spring.io)"
     ]
   }
 }
