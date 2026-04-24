@@ -28,11 +28,14 @@ public class BergerAlgorithm {
 	 * @param totalLegs         total number of legs to generate
 	 * @param legsWithAdvantage number of legs (from leg 0 onwards) that have home advantage;
 	 *                          the remaining legs are neutral
+	 * @param goalLimit         minimum score to register 1 goal
+	 * @param goalOffset        points range per additional goal
 	 */
 	public Campionato runAlgoritmoDiBerger2(String[] squadre, Map<String, Player> players,
-			BigDecimal homeAdvantage, int totalLegs, int legsWithAdvantage) {
+			BigDecimal homeAdvantage, int totalLegs, int legsWithAdvantage,
+			int goalLimit, int goalOffset) {
 
-		Campionato calendario = new Campionato(homeAdvantage);
+		Campionato calendario = new Campionato(homeAdvantage, goalLimit, goalOffset);
 		int totalTeams = squadre.length;
 		int legSize = totalTeams - 1;
 

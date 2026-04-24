@@ -129,7 +129,9 @@ public class FantaController {
     @PostMapping("/validate")
     public ResponseEntity<?> validate(
             @RequestParam("token") String token,
-            @RequestParam(defaultValue = "2") BigDecimal homeAdvantage
+            @RequestParam(defaultValue = "2")  BigDecimal homeAdvantage,
+            @RequestParam(defaultValue = "66") int goalLimit,
+            @RequestParam(defaultValue = "6")  int goalOffset
     ) throws IOException {
         ParseSession session = sessions.get(token); // peek only — session stays alive for /run
         if (session == null) {
@@ -137,8 +139,10 @@ public class FantaController {
                     "Sessione scaduta o non trovata. Carica di nuovo il file.");
         }
         try {
-            ResultsParser.readExcel(session.tempFile.toString(), session.playerCount, homeAdvantage, true);
-            LOGGER.info("Validation OK: token={} homeAdvantage={}", token, homeAdvantage);
+            ResultsParser.readExcel(session.tempFile.toString(), session.playerCount,
+                    homeAdvantage, true, goalLimit, goalOffset);
+            LOGGER.info("Validation OK: token={} homeAdvantage={} goalLimit={} goalOffset={}",
+                    token, homeAdvantage, goalLimit, goalOffset);
             return ResponseEntity.ok().build();
         } catch (InvalidFormatException | IllegalArgumentException | IllegalStateException e) {
             LOGGER.error("Validation error: {}", e.getMessage());
@@ -153,9 +157,11 @@ public class FantaController {
     @PostMapping("/run")
     public ResponseEntity<?> run(
             @RequestParam("token") String token,
-            @RequestParam(defaultValue = "2") BigDecimal homeAdvantage,
+            @RequestParam(defaultValue = "2")  BigDecimal homeAdvantage,
             @RequestParam(defaultValue = "-1") int threads,
-            @RequestParam(defaultValue = "0") long permutationLimit
+            @RequestParam(defaultValue = "0")  long permutationLimit,
+            @RequestParam(defaultValue = "66") int goalLimit,
+            @RequestParam(defaultValue = "6")  int goalOffset
     ) throws IOException {
         ParseSession session = sessions.remove(token);
         if (session == null) {
@@ -164,12 +170,12 @@ public class FantaController {
         }
 
         try {
-            LOGGER.info("Running: playerCount={} homeAdvantage={} threads={} limit={}",
-                    session.playerCount, homeAdvantage, threads, permutationLimit);
+            LOGGER.info("Running: playerCount={} homeAdvantage={} goalLimit={} goalOffset={} threads={} limit={}",
+                    session.playerCount, homeAdvantage, goalLimit, goalOffset, threads, permutationLimit);
 
             Map<String, Player> players = ResultsParser.readExcel(
                     session.tempFile.toString(), session.playerCount, homeAdvantage, false);
-            CalendarPermutator permutator = new CalendarPermutator(players, homeAdvantage);
+            CalendarPermutator permutator = new CalendarPermutator(players, homeAdvantage, goalLimit, goalOffset);
             PartialResult result = permutator.computePermutations(permutationLimit, threads);
 
             return ResponseEntity.ok(RunResult.from(result));

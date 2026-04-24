@@ -85,8 +85,8 @@
       background: #1e293b;
       margin: 0 4px;
       margin-bottom: 22px;
-      min-width: 32px;
-      max-width: 80px;
+      min-width: 24px;
+      max-width: 60px;
       transition: background 0.25s;
     }
 
@@ -283,7 +283,7 @@
       margin-top: 1rem;
     }
 
-    /* ── Results table (step 4) ──────────────────────────────────────── */
+    /* ── Results table (step 5) ──────────────────────────────────────── */
     .meta-row {
       display: flex;
       gap: 2rem;
@@ -379,16 +379,21 @@
     <div class="step-connector" id="sc1"></div>
     <div class="step-node" id="sn2">
       <div class="step-circle">2</div>
-      <div class="step-label">Convalida</div>
+      <div class="step-label">Classifica</div>
     </div>
     <div class="step-connector" id="sc2"></div>
     <div class="step-node" id="sn3">
       <div class="step-circle">3</div>
-      <div class="step-label">Impostazioni</div>
+      <div class="step-label">Parametri</div>
     </div>
     <div class="step-connector" id="sc3"></div>
     <div class="step-node" id="sn4">
       <div class="step-circle">4</div>
+      <div class="step-label">Calcolo</div>
+    </div>
+    <div class="step-connector" id="sc4"></div>
+    <div class="step-node" id="sn5">
+      <div class="step-circle">5</div>
       <div class="step-label">Risultati</div>
     </div>
   </div>
@@ -417,11 +422,11 @@
     </div>
   </div>
 
-  <!-- ── Step 2: Players + home advantage + validation ───────────── -->
+  <!-- ── Step 2: Classifica ───────────────────────────────────────── -->
   <div id="step2" hidden>
     <div class="card">
-      <div class="card-title">Convalida risultati</div>
-      <div class="card-subtitle">Imposta il vantaggio campo e verifica che i risultati nel file corrispondano</div>
+      <div class="card-title">Classifica</div>
+      <div class="card-subtitle">Classifica attuale della lega calcolata dal file caricato</div>
 
       <div class="info-row">
         <div class="info-item"><strong id="s2PlayerCount">—</strong>Giocatori</div>
@@ -449,30 +454,51 @@
         </table>
       </div>
 
-      <hr class="section-divider">
-
-      <div class="field">
-        <label>Vantaggio campo casa <small>(punti aggiunti al punteggio della squadra di casa — impostazione della lega)</small></label>
-        <input type="number" id="settingHome" value="2" min="0" max="10" step="0.5">
-      </div>
-
-      <div id="step2Error" class="error-box" hidden></div>
-
       <div class="btn-row">
         <button class="btn btn-secondary" id="btnBackTo1">← Indietro</button>
         <button class="btn btn-primary" id="btnGoTo3">Continua →</button>
       </div>
+    </div>
+  </div>
 
-      <div class="loading-overlay" id="step2Loading" hidden>
+  <!-- ── Step 3: Parametri lega ───────────────────────────────────── -->
+  <div id="step3" hidden>
+    <div class="card">
+      <div class="card-title">Parametri lega</div>
+      <div class="card-subtitle">Configura il vantaggio campo e le soglie per il calcolo dei gol</div>
+
+      <div class="field">
+        <label>Vantaggio campo casa <small>(punti aggiunti al punteggio della squadra di casa)</small></label>
+        <input type="number" id="settingHome" value="2" min="0" max="10" step="0.5">
+      </div>
+
+      <div class="field">
+        <label>Soglia gol <small>(punteggio minimo per segnare 1 gol — default 66)</small></label>
+        <input type="number" id="settingGoalLimit" value="66" min="1" max="200" step="1">
+      </div>
+
+      <div class="field">
+        <label>Intervallo gol <small>(punti per ogni gol aggiuntivo — default 6)</small></label>
+        <input type="number" id="settingGoalOffset" value="6" min="1" max="50" step="1">
+      </div>
+
+      <div id="step3Error" class="error-box" hidden></div>
+
+      <div class="btn-row">
+        <button class="btn btn-secondary" id="btnBackTo2">← Indietro</button>
+        <button class="btn btn-primary" id="btnGoTo4">Continua →</button>
+      </div>
+
+      <div class="loading-overlay" id="step3Loading" hidden>
         <div class="spinner"></div>
         <div class="loading-text">Validazione in corso…</div>
       </div>
     </div>
   </div>
 
-  <!-- ── Step 3: Computation settings ────────────────────────────── -->
-  <div id="step3" hidden>
-    <div class="card" id="step3Card">
+  <!-- ── Step 4: Computation settings ────────────────────────────── -->
+  <div id="step4" hidden>
+    <div class="card">
       <div class="card-title">Impostazioni calcolo</div>
       <div class="card-subtitle">Configura il numero di permutazioni e la modalità di esecuzione</div>
 
@@ -501,22 +527,22 @@
         </div>
       </div>
 
-      <div id="step3Error" class="error-box" hidden></div>
+      <div id="step4Error" class="error-box" hidden></div>
 
       <div class="btn-row">
-        <button class="btn btn-secondary" id="btnBackTo2">← Indietro</button>
+        <button class="btn btn-secondary" id="btnBackTo3">← Indietro</button>
         <button class="btn btn-primary" id="btnRun">Avvia calcolo</button>
       </div>
 
-      <div class="loading-overlay" id="step3Loading" hidden>
+      <div class="loading-overlay" id="step4Loading" hidden>
         <div class="spinner"></div>
         <div class="loading-text">Calcolo in corso…<br><span style="font-size:0.78rem;color:#475569">Con tante permutazioni può volerci qualche minuto</span></div>
       </div>
     </div>
   </div>
 
-  <!-- ── Step 4: Results ──────────────────────────────────────────── -->
-  <div id="step4" hidden>
+  <!-- ── Step 5: Results ──────────────────────────────────────────── -->
+  <div id="step5" hidden>
     <div class="card">
       <div class="card-title">Risultati</div>
       <div class="card-subtitle">Frequenza di ogni posizione finale per ciascun giocatore</div>
@@ -545,17 +571,19 @@
     playerCount: 0,
     matchdayCount: 0,
     homeAdvantage: 2,
+    goalLimit: 66,
+    goalOffset: 6,
   };
 
   // ── Step navigation ──────────────────────────────────────────────────────
   function goTo(step) {
-    [1, 2, 3, 4].forEach(i => {
+    [1, 2, 3, 4, 5].forEach(i => {
       document.getElementById('step' + i).hidden = (i !== step);
       const node = document.getElementById('sn' + i);
       node.classList.toggle('active', i === step);
       node.classList.toggle('done', i < step);
     });
-    [1, 2, 3].forEach(i => {
+    [1, 2, 3, 4].forEach(i => {
       document.getElementById('sc' + i).classList.toggle('done', i < step);
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -587,15 +615,11 @@
       state.token         = body.token;
       state.playerCount   = body.playerCount;
       state.matchdayCount = body.matchdayCount;
-      state.validated     = false;
 
       // Populate step 2
       document.getElementById('s2PlayerCount').textContent   = body.playerCount;
       document.getElementById('s2MatchdayCount').textContent = body.matchdayCount;
       renderStandings(body.standings);
-
-      // Reset step 2 error state
-      document.getElementById('step2Error').hidden = true;
 
       goTo(2);
     } catch (err) {
@@ -607,12 +631,7 @@
     }
   });
 
-  // ── Step 2: validate-then-continue ──────────────────────────────────────
-  const step2Loading = document.getElementById('step2Loading');
-  const step2Error   = document.getElementById('step2Error');
-  const btnGoTo3     = document.getElementById('btnGoTo3');
-  const settingHome  = document.getElementById('settingHome');
-
+  // ── Step 2: classifica — just navigate ──────────────────────────────────
   document.getElementById('btnBackTo1').addEventListener('click', () => {
     fileInput.value = '';
     btnAnalyze.disabled = true;
@@ -620,43 +639,62 @@
     goTo(1);
   });
 
-  btnGoTo3.addEventListener('click', async () => {
-    step2Error.hidden = true;
-    step2Loading.hidden = false;
-    btnGoTo3.disabled = true;
-
-    try {
-      const body = new URLSearchParams({
-        token:         state.token,
-        homeAdvantage: settingHome.value,
-      });
-      const resp = await fetch('/validate', { method: 'POST', body });
-      if (!resp.ok) throw new Error(await resp.text() || `Errore HTTP ${resp.status}`);
-
-      state.homeAdvantage = parseFloat(settingHome.value);
-      goTo(3);
-    } catch (err) {
-      step2Error.textContent = 'Errore di validazione: ' + err.message;
-      step2Error.hidden = false;
-    } finally {
-      step2Loading.hidden = true;
-      btnGoTo3.disabled = false;
-    }
+  document.getElementById('btnGoTo3').addEventListener('click', () => {
+    goTo(3);
   });
 
-  // ── Step 3: run ──────────────────────────────────────────────────────────
+  // ── Step 3: parametri — validate then continue ──────────────────────────
   const step3Loading = document.getElementById('step3Loading');
   const step3Error   = document.getElementById('step3Error');
-  const btnRun       = document.getElementById('btnRun');
+  const btnGoTo4     = document.getElementById('btnGoTo4');
+  const settingHome  = document.getElementById('settingHome');
 
   document.getElementById('btnBackTo2').addEventListener('click', () => {
     step3Error.hidden = true;
     goTo(2);
   });
 
-  btnRun.addEventListener('click', async () => {
+  btnGoTo4.addEventListener('click', async () => {
     step3Error.hidden = true;
     step3Loading.hidden = false;
+    btnGoTo4.disabled = true;
+
+    try {
+      const body = new URLSearchParams({
+        token:         state.token,
+        homeAdvantage: settingHome.value,
+        goalLimit:     document.getElementById('settingGoalLimit').value,
+        goalOffset:    document.getElementById('settingGoalOffset').value,
+      });
+      const resp = await fetch('/validate', { method: 'POST', body });
+      if (!resp.ok) throw new Error(await resp.text() || `Errore HTTP ${resp.status}`);
+
+      state.homeAdvantage = parseFloat(settingHome.value);
+      state.goalLimit     = parseInt(document.getElementById('settingGoalLimit').value,  10);
+      state.goalOffset    = parseInt(document.getElementById('settingGoalOffset').value, 10);
+      goTo(4);
+    } catch (err) {
+      step3Error.textContent = 'Errore di validazione: ' + err.message;
+      step3Error.hidden = false;
+    } finally {
+      step3Loading.hidden = true;
+      btnGoTo4.disabled = false;
+    }
+  });
+
+  // ── Step 4: run ──────────────────────────────────────────────────────────
+  const step4Loading = document.getElementById('step4Loading');
+  const step4Error   = document.getElementById('step4Error');
+  const btnRun       = document.getElementById('btnRun');
+
+  document.getElementById('btnBackTo3').addEventListener('click', () => {
+    step4Error.hidden = true;
+    goTo(3);
+  });
+
+  btnRun.addEventListener('click', async () => {
+    step4Error.hidden = true;
+    step4Loading.hidden = false;
     btnRun.disabled = true;
 
     const threads = document.querySelector('input[name="threads"]:checked').value;
@@ -665,6 +703,8 @@
       const body = new URLSearchParams({
         token:            state.token,
         homeAdvantage:    state.homeAdvantage,
+        goalLimit:        state.goalLimit,
+        goalOffset:       state.goalOffset,
         threads:          threads,
         permutationLimit: document.getElementById('settingLimit').value,
       });
@@ -672,17 +712,17 @@
       if (!resp.ok) throw new Error(await resp.text() || `Errore HTTP ${resp.status}`);
 
       renderResults(await resp.json());
-      goTo(4);
+      goTo(5);
     } catch (err) {
-      step3Error.textContent = 'Errore: ' + err.message;
-      step3Error.hidden = false;
+      step4Error.textContent = 'Errore: ' + err.message;
+      step4Error.hidden = false;
     } finally {
-      step3Loading.hidden = true;
+      step4Loading.hidden = true;
       btnRun.disabled = false;
     }
   });
 
-  // ── Step 4: results & restart ────────────────────────────────────────────
+  // ── Step 5: results & restart ────────────────────────────────────────────
   document.getElementById('btnRestart').addEventListener('click', () => {
     fileInput.value = '';
     btnAnalyze.disabled = true;

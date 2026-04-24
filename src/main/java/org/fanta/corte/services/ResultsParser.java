@@ -31,8 +31,14 @@ public class ResultsParser {
 	private static final String REGEX = "[\\d]+";
 	private static final Pattern DAYTITLEPATTERN = Pattern.compile(REGEX, Pattern.MULTILINE);
 
+	/** Backward-compatible overload — uses default goal thresholds (limit=66, offset=6). */
 	public static Map<String, Player> readExcel(String excelPath, int numberOfPlayers, BigDecimal homeAddition,
 			boolean validate) throws InvalidFormatException, IOException {
+		return readExcel(excelPath, numberOfPlayers, homeAddition, validate, 66, 6);
+	}
+
+	public static Map<String, Player> readExcel(String excelPath, int numberOfPlayers, BigDecimal homeAddition,
+			boolean validate, int goalLimit, int goalOffset) throws InvalidFormatException, IOException {
 		// Creating a Workbook from an Excel file (.xls or .xlsx)
 		try (Workbook workbook = WorkbookFactory.create(new File(excelPath))) {
 			Map<String, Player> fantagiocatori = new HashMap<>();
@@ -164,8 +170,8 @@ public class ResultsParser {
 												// Step 1: Excel structure check.
 												// col B already holds the effective score (pure + HA for non-neutral,
 												// pure for neutral), so we verify getGoals(colB) matches col+4 directly.
-												int directHome = Partita.getGoals(rawHomeScore);
-												int directAway = Partita.getGoals(rawAwayScore);
+												int directHome = Partita.getGoals(rawHomeScore, goalLimit, goalOffset);
+												int directAway = Partita.getGoals(rawAwayScore, goalLimit, goalOffset);
 												if (directHome != expectedHome || directAway != expectedAway) {
 													throw new IllegalStateException(String.format(
 															"Giornata %d, %s vs %s: struttura Excel non valida — " +
@@ -181,7 +187,7 @@ public class ResultsParser {
 												// scores and run Partita.calculate(). This catches any inconsistency
 												// between score parsing and the simulation model — in particular,
 												// neutral-leg handling where HA must not be applied.
-												Campionato tempCamp = new Campionato(homeAddition);
+												Campionato tempCamp = new Campionato(homeAddition, goalLimit, goalOffset);
 												Giornata tempGiornata = new Giornata(tempCamp);
 												tempGiornata.setId(giornataNumero);
 												tempGiornata.setNeutral(!hasHomeAdv);
@@ -225,6 +231,12 @@ public class ResultsParser {
 
 	}
 
+	/** Backward-compatible overload — uses default goal thresholds (limit=66, offset=6). */
+	public static Map<String, int[]> readStandings(String excelPath, int numberOfPlayers)
+			throws InvalidFormatException, IOException {
+		return readStandings(excelPath, numberOfPlayers, 66, 6);
+	}
+
 	/**
 	 * Reads every match from the Excel and returns a standings table.
 	 * The home score in col B is used as-is (it already includes any home advantage),
@@ -232,8 +244,8 @@ public class ResultsParser {
 	 *
 	 * @return map from player name to int[]{played, won, drawn, lost, goalsFor, goalsAgainst}
 	 */
-	public static Map<String, int[]> readStandings(String excelPath, int numberOfPlayers)
-			throws InvalidFormatException, IOException {
+	public static Map<String, int[]> readStandings(String excelPath, int numberOfPlayers,
+			int goalLimit, int goalOffset) throws InvalidFormatException, IOException {
 		try (Workbook workbook = WorkbookFactory.create(new File(excelPath))) {
 			Map<String, int[]> standings = new HashMap<>();
 			Sheet sheet = workbook.getSheetAt(0);
@@ -265,8 +277,8 @@ public class ResultsParser {
 						BigDecimal rawHomeScore = readScore(dataRow.getCell(currentColumn + 1), dataFormatter);
 						BigDecimal rawAwayScore = readScore(dataRow.getCell(currentColumn + 2), dataFormatter);
 
-						int homeGoals = Partita.getGoals(rawHomeScore);
-						int awayGoals = Partita.getGoals(rawAwayScore);
+						int homeGoals = Partita.getGoals(rawHomeScore, goalLimit, goalOffset);
+						int awayGoals = Partita.getGoals(rawAwayScore, goalLimit, goalOffset);
 
 						// [0]=played [1]=won [2]=drawn [3]=lost [4]=goalsFor [5]=goalsAgainst
 						int[] hs = standings.computeIfAbsent(homeName, k -> new int[6]);

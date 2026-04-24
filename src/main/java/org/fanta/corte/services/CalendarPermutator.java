@@ -41,10 +41,20 @@ public class CalendarPermutator {
 	private final long calendarsToPrint = 11;
 	private final int totalLegs;
 	private final int legsWithAdvantage;
+	private final int goalLimit;
+	private final int goalOffset;
 
+	/** Backward-compatible constructor — uses default goal thresholds (limit=66, offset=6). */
 	public CalendarPermutator(Map<String, Player> players, BigDecimal homeAdvantage) {
-		this.players = players;
+		this(players, homeAdvantage, 66, 6);
+	}
+
+	/** Full constructor. */
+	public CalendarPermutator(Map<String, Player> players, BigDecimal homeAdvantage, int goalLimit, int goalOffset) {
+		this.players       = players;
 		this.homeAdvantage = homeAdvantage;
+		this.goalLimit     = goalLimit;
+		this.goalOffset    = goalOffset;
 
 		int maxGiornata = players.values().stream()
 				.flatMap(p -> p.getResults().keySet().stream())
@@ -253,7 +263,7 @@ public class CalendarPermutator {
 
 	private void processPermutation(String[] elements, PartialResult result) {
 		LOGGER.debug("{} -> Calculating calendar from ordered elements: {}", result.permutationCounter, elements);
-		Campionato c = bergerAlgorithm.runAlgoritmoDiBerger2(elements, players, homeAdvantage, totalLegs, legsWithAdvantage);
+		Campionato c = bergerAlgorithm.runAlgoritmoDiBerger2(elements, players, homeAdvantage, totalLegs, legsWithAdvantage, goalLimit, goalOffset);
 		Map<Player, Integer> classifica = c.calculate();
 
 		int posizione = 0;

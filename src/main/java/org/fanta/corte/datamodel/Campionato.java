@@ -14,9 +14,19 @@ public class Campionato {
 
 	private List<Giornata> giornate;
 	private BigDecimal homeAdvantage;
+	private int goalLimit;
+	private int goalOffset;
 
-	public Campionato(BigDecimal homeAdvantage) {
+	/** Full constructor. */
+	public Campionato(BigDecimal homeAdvantage, int goalLimit, int goalOffset) {
 		this.homeAdvantage = homeAdvantage;
+		this.goalLimit  = goalLimit;
+		this.goalOffset = goalOffset;
+	}
+
+	/** Backward-compatible constructor — uses default goal thresholds (66, step 6). */
+	public Campionato(BigDecimal homeAdvantage) {
+		this(homeAdvantage, 66, 6);
 	}
 
 	public List<Giornata> getGiornate() {
@@ -43,13 +53,11 @@ public class Campionato {
 		return sb.toString();
 	}
 
-	public BigDecimal getHomeAdvantage() {
-		return homeAdvantage;
-	}
+	public BigDecimal getHomeAdvantage() { return homeAdvantage; }
+	public void setHomeAdvantage(BigDecimal homeAdvantage) { this.homeAdvantage = homeAdvantage; }
 
-	public void setHomeAdvantage(BigDecimal homeAdvantage) {
-		this.homeAdvantage = homeAdvantage;
-	}
+	public int getGoalLimit()  { return goalLimit; }
+	public int getGoalOffset() { return goalOffset; }
 
 	public Map<Player, Integer> calculate() {
 		Map<Player, Integer> classifica = new HashMap<>();

@@ -1,6 +1,7 @@
 package org.fanta.corte.datamodel;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 public class Partita {
 
@@ -47,32 +48,26 @@ public class Partita {
 			punteggioCasa = punteggioCasa.add(giornata.getCampionato().getHomeAdvantage());
 		}
 		punteggioTrasf = trasferta.getResults().get(numeroGiornata);
-		goalCasa = getGoals(punteggioCasa);
-		goalTrasf = getGoals(punteggioTrasf);
+		int goalLimit  = giornata.getCampionato().getGoalLimit();
+		int goalOffset = giornata.getCampionato().getGoalOffset();
+		goalCasa  = getGoals(punteggioCasa,  goalLimit, goalOffset);
+		goalTrasf = getGoals(punteggioTrasf, goalLimit, goalOffset);
 	}
 
-	public static int getGoals(BigDecimal punteggio) {
-		if (punteggio.compareTo(BigDecimal.valueOf(66)) < 0) {
+	/**
+	 * Converts a fantasy score to a goal count using configurable thresholds.
+	 *
+	 * @param punteggio  the effective score (home advantage already applied if applicable)
+	 * @param goalLimit  minimum score to register 1 goal (default 66)
+	 * @param goalOffset points range per additional goal (default 6)
+	 */
+	public static int getGoals(BigDecimal punteggio, int goalLimit, int goalOffset) {
+		if (punteggio.compareTo(BigDecimal.valueOf(goalLimit)) < 0) {
 			return 0;
-		} else if (punteggio.compareTo(BigDecimal.valueOf(72)) < 0) {
-			return 1;
-		} else if (punteggio.compareTo(BigDecimal.valueOf(78)) < 0) {
-			return 2;
-		} else if (punteggio.compareTo(BigDecimal.valueOf(84)) < 0) {
-			return 3;
-		} else if (punteggio.compareTo(BigDecimal.valueOf(90)) < 0) {
-			return 4;
-		} else if (punteggio.compareTo(BigDecimal.valueOf(96)) < 0) {
-			return 5;
-		} else if (punteggio.compareTo(BigDecimal.valueOf(102)) < 0) {
-			return 6;
-		} else if (punteggio.compareTo(BigDecimal.valueOf(108)) < 0) {
-			return 7;
-		} else {
-			throw new IllegalStateException(
-					"Si vabbe quanti cazzi di punti hai fatto in una sola giornata???" + punteggio);
 		}
-
+		return punteggio.subtract(BigDecimal.valueOf(goalLimit))
+				.divide(BigDecimal.valueOf(goalOffset), 0, RoundingMode.FLOOR)
+				.intValue() + 1;
 	}
 
 	public Giornata getGiornata() {
