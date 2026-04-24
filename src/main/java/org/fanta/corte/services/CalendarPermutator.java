@@ -74,13 +74,8 @@ public class CalendarPermutator {
 	// Public API
 	// -------------------------------------------------------------------------
 
-	/** Single-thread entry point (backward-compatible). */
-	public int permuteCalendars(long permutationLimits) {
-		return permuteCalendars(permutationLimits, 1);
-	}
-
 	/**
-	 * @param permutationLimits max permutations to process (0 = unlimited)
+	 * @param permutationLimits max permutations to process (-1 = unlimited)
 	 * @param threads           1 = single-thread; -1 = auto (availableProcessors); N > 1 = fixed pool
 	 */
 	public int permuteCalendars(long permutationLimits, int threads) {
@@ -94,7 +89,7 @@ public class CalendarPermutator {
 	 * Runs the permutation and returns the raw result without any I/O side effects.
 	 * Useful for testing and for callers that need the statistics directly.
 	 *
-	 * @param permutationLimits max permutations to process (0 = unlimited)
+	 * @param permutationLimits max permutations to process (-1 = unlimited)
 	 * @param threads           1 = single-thread; -1 = auto (availableProcessors); N > 1 = fixed pool
 	 */
 	public PartialResult computePermutations(long permutationLimits, int threads) {
@@ -315,7 +310,7 @@ public class CalendarPermutator {
 						writer.newLine();
 					}
 				} catch (IOException e) {
-					LOGGER.error("An error occurred while writing file {}", e, e);
+					LOGGER.error("An error occurred while writing file {}", e.getMessage(), e);
 				}
 			}
 		}

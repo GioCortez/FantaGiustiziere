@@ -133,6 +133,9 @@ public class FantaController {
             @RequestParam(defaultValue = "66") int goalLimit,
             @RequestParam(defaultValue = "6")  int goalOffset
     ) throws IOException {
+        if (goalOffset <= 0) {
+            return ResponseEntity.badRequest().body("L'intervallo gol deve essere un intero maggiore di 0.");
+        }
         ParseSession session = sessions.get(token); // peek only — session stays alive for /run
         if (session == null) {
             return ResponseEntity.badRequest().body(
@@ -159,10 +162,13 @@ public class FantaController {
             @RequestParam("token") String token,
             @RequestParam(defaultValue = "2")  BigDecimal homeAdvantage,
             @RequestParam(defaultValue = "-1") int threads,
-            @RequestParam(defaultValue = "0")  long permutationLimit,
+            @RequestParam(defaultValue = "-1") long permutationLimit,
             @RequestParam(defaultValue = "66") int goalLimit,
             @RequestParam(defaultValue = "6")  int goalOffset
     ) throws IOException {
+        if (goalOffset <= 0) {
+            return ResponseEntity.badRequest().body("L'intervallo gol deve essere un intero maggiore di 0.");
+        }
         ParseSession session = sessions.remove(token);
         if (session == null) {
             return ResponseEntity.badRequest().body(
