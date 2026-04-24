@@ -38,7 +38,7 @@ public class CalendarPermutator {
 	private final BergerAlgorithm bergerAlgorithm = new BergerAlgorithm();
 	private final Map<String, Player> players;
 	private final BigDecimal homeAdvantage;
-	private final long calendarsToPrint = 11;
+	private final long calendarsToPrint;
 	private final int totalLegs;
 	private final int legsWithAdvantage;
 	private final int goalLimit;
@@ -51,10 +51,11 @@ public class CalendarPermutator {
 
 	/** Full constructor. */
 	public CalendarPermutator(Map<String, Player> players, BigDecimal homeAdvantage, int goalLimit, int goalOffset) {
-		this.players       = players;
-		this.homeAdvantage = homeAdvantage;
-		this.goalLimit     = goalLimit;
-		this.goalOffset    = goalOffset;
+		this.players          = players;
+		this.homeAdvantage    = homeAdvantage;
+		this.goalLimit        = goalLimit;
+		this.goalOffset       = goalOffset;
+		this.calendarsToPrint = players.size() - 1;
 
 		int maxGiornata = players.values().stream()
 				.flatMap(p -> p.getResults().keySet().stream())
