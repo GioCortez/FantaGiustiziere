@@ -51,13 +51,13 @@ class CalendarPermutatorTest {
 
     @Test
     void singleAndMultiThreadProduceSameStatistics() {
-        // Run single-thread (limit=0 → all 24 permutations)
+        // Run single-thread (limit=-1 → all 24 permutations)
         PartialResult single = new CalendarPermutator(createPlayers(), HOME_ADVANTAGE)
-                .computePermutations(0, 1);
+                .computePermutations(-1, 1);
 
-        // Run multi-thread (limit=0 → all 24 permutations across n partitions)
+        // Run multi-thread (limit=-1 → all 24 permutations across n partitions)
         PartialResult multi = new CalendarPermutator(createPlayers(), HOME_ADVANTAGE)
-                .computePermutations(0, -1);
+                .computePermutations(-1, -1);
 
         // Total permutation count must match
         assertEquals(single.permutationCounter, multi.permutationCounter,

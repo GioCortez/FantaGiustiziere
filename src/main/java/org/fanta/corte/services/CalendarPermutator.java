@@ -1,9 +1,5 @@
 package org.fanta.corte.services;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,7 +13,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.fanta.corte.datamodel.Campionato;
 import org.fanta.corte.datamodel.Player;
 import org.fanta.corte.services.exception.LimitReachedException;
@@ -75,20 +70,6 @@ public class CalendarPermutator {
 	// -------------------------------------------------------------------------
 
 	/**
-	 * @param permutationLimits max permutations to process (-1 = unlimited)
-	 * @param threads           1 = single-thread; -1 = auto (availableProcessors); N > 1 = fixed pool
-	 */
-	public int permuteCalendars(long permutationLimits, int threads) {
-		PartialResult finalResult = computePermutations(permutationLimits, threads);
-		logStatistics(finalResult, permutationLimits);
-		writeResultFiles(finalResult);
-		return finalResult.permutationCounter;
-	}
-
-	/**
-	 * Runs the permutation and returns the raw result without any I/O side effects.
-	 * Useful for testing and for callers that need the statistics directly.
-	 *
 	 * @param permutationLimits max permutations to process (-1 = unlimited)
 	 * @param threads           1 = single-thread; -1 = auto (availableProcessors); N > 1 = fixed pool
 	 */
@@ -276,44 +257,6 @@ public class CalendarPermutator {
 			posizione++;
 		}
 		result.permutationCounter++;
-	}
-
-	// -------------------------------------------------------------------------
-	// Output
-	// -------------------------------------------------------------------------
-
-	private void logStatistics(PartialResult result, long permutationLimits) {
-		for (Entry<Player, long[]> entry : result.statistics.entrySet()) {
-			long[] totals = entry.getValue();
-			LOGGER.debug("Relative Statistics for: {} -> {}", entry.getKey(), totals);
-			int[] percent = new int[totals.length];
-			for (int i = 0; i < totals.length; i++) {
-				percent[i] = (int) (totals[i] * 100.0 / result.permutationCounter + 0.5);
-			}
-			LOGGER.debug("Percent Statistics for : {} -> {}", entry.getKey(), percent);
-		}
-	}
-
-	private void writeResultFiles(PartialResult result) {
-		String filePath = "results" + File.separator;
-		for (Entry<Player, List<Campionato>> entry : result.calendarsToBePrinted.entrySet()) {
-			List<Campionato> campionati = entry.getValue();
-			if (CollectionUtils.isNotEmpty(campionati)) {
-				String filename = filePath + entry.getKey().getName() + ".txt";
-				File f = new File(filename);
-				f.getParentFile().mkdirs();
-				try (BufferedWriter writer = new BufferedWriter(new FileWriter(f))) {
-					for (Campionato c : campionati) {
-						writer.write("Campionato: ");
-						writer.newLine();
-						writer.write(c.toString());
-						writer.newLine();
-					}
-				} catch (IOException e) {
-					LOGGER.error("An error occurred while writing file {}", e.getMessage(), e);
-				}
-			}
-		}
 	}
 
 	// -------------------------------------------------------------------------

@@ -63,6 +63,10 @@ public class Campionato {
 		Map<Player, Integer> classifica = new HashMap<>();
 		for (Giornata g : giornate) {
 			for (Partita p : g.getPartite()) {
+				// Ensure both players exist in the standings even if they never score a point.
+				classifica.putIfAbsent(p.getCasa(), 0);
+				classifica.putIfAbsent(p.getTrasferta(), 0);
+
 				if (p.getGoalCasa() > p.getGoalTrasf()) {
 					// Home win!
 					addPoints(classifica, p.getCasa(), 3);

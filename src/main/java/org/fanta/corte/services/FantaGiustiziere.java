@@ -29,7 +29,7 @@ public class FantaGiustiziere {
 			CalendarPermutator permutator = new CalendarPermutator(fantaPlayers, homeAdvantage);
 
 			Instant beforePermuting = Instant.now();
-			long permutationNumber = permutator.permuteCalendars(permutationLimits, threads);
+			long permutationNumber = permutator.computePermutations(permutationLimits, threads).permutationCounter;
 
 			timeElapsed = Duration.between(beforePermuting, Instant.now()).toMillis() / 1000;
 			LOGGER.info("Seconds taken to permute {} calendars: {}", permutationNumber, timeElapsed);
