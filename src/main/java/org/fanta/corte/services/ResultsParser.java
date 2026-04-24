@@ -35,12 +35,12 @@ public class ResultsParser {
 	private static final Pattern DAYTITLEPATTERN = Pattern.compile(REGEX, Pattern.MULTILINE);
 
 	/** Backward-compatible overload — uses default goal thresholds (limit=66, offset=6). */
-	public static Map<String, Player> readExcel(String excelPath, int numberOfPlayers, BigDecimal homeAddition,
+	public static Map<String, Player> readExcel(String excelPath, BigDecimal homeAddition,
 			boolean validate) throws InvalidFormatException, IOException {
-		return readExcel(excelPath, numberOfPlayers, homeAddition, validate, 66, 6);
+		return readExcel(excelPath, homeAddition, validate, 66, 6);
 	}
 
-	public static Map<String, Player> readExcel(String excelPath, int numberOfPlayers, BigDecimal homeAddition,
+	public static Map<String, Player> readExcel(String excelPath, BigDecimal homeAddition,
 			boolean validate, int goalLimit, int goalOffset) throws InvalidFormatException, IOException {
 		// Creating a Workbook from an Excel file (.xls or .xlsx)
 		try (Workbook workbook = WorkbookFactory.create(new File(excelPath))) {
@@ -48,8 +48,6 @@ public class ResultsParser {
 
 			// Getting the Sheet at index zero
 			Sheet sheet = workbook.getSheetAt(0);
-
-			int resultRows = numberOfPlayers / 2 - 1;
 
 			// Create a DataFormatter to format and get each cell's value as String
 			DataFormatter dataFormatter = new DataFormatter();
@@ -95,6 +93,8 @@ public class ResultsParser {
 			int legsWithAdvantage = (totalLegs <= 1 || totalLegs % 2 == 0) ? totalLegs : totalLegs - 1;
 			LOGGER.info("Schedule: {} players, {} giornate, {} legs ({} with home advantage, {} neutral)",
 					detectedPlayerCount, maxGiornata, totalLegs, legsWithAdvantage, totalLegs - legsWithAdvantage);
+
+			int resultRows = detectedPlayerCount > 0 ? detectedPlayerCount / 2 - 1 : 200;
 
 			// ── Pass 2: parse scores ──────────────────────────────────────────────────────
 			Iterator<Row> rowIterator = sheet.rowIterator();
@@ -249,9 +249,9 @@ public class ResultsParser {
 	}
 
 	/** Backward-compatible overload — uses default goal thresholds (limit=66, offset=6). */
-	public static Map<String, int[]> readStandings(String excelPath, int numberOfPlayers)
+	public static Map<String, int[]> readStandings(String excelPath)
 			throws InvalidFormatException, IOException {
-		return readStandings(excelPath, numberOfPlayers, 66, 6);
+		return readStandings(excelPath, 66, 6);
 	}
 
 	/**
@@ -261,12 +261,12 @@ public class ResultsParser {
 	 *
 	 * @return map from player name to int[]{played, won, drawn, lost, goalsFor, goalsAgainst}
 	 */
-	public static Map<String, int[]> readStandings(String excelPath, int numberOfPlayers,
+	public static Map<String, int[]> readStandings(String excelPath,
 			int goalLimit, int goalOffset) throws InvalidFormatException, IOException {
 		try (Workbook workbook = WorkbookFactory.create(new File(excelPath))) {
 			Map<String, int[]> standings = new HashMap<>();
 			Sheet sheet = workbook.getSheetAt(0);
-			int resultRows = numberOfPlayers / 2 - 1;
+			int resultRows = 200; // upper bound — break guard handles actual termination
 			DataFormatter dataFormatter = new DataFormatter();
 
 			Iterator<Row> rowIterator = sheet.rowIterator();

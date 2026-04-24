@@ -31,9 +31,6 @@ public class FantaController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FantaController.class.getSimpleName());
 
-    // Max number of player rows to scan — well above any realistic league size.
-    private static final int MAX_PLAYERS_SCAN = 200;
-
     // In-memory session store: token → session data. Cleaned up lazily on each /parse call.
     private final ConcurrentHashMap<String, ParseSession> sessions = new ConcurrentHashMap<>();
 
@@ -49,10 +46,8 @@ public class FantaController {
         try {
             file.transferTo(tempFile);
 
-            // Auto-detect players: pass a large upper bound — the break-guard in readExcel
-            // stops at the first empty row, so the actual count is derived from the result.
             Map<String, Player> players = ResultsParser.readExcel(
-                    tempFile.toString(), MAX_PLAYERS_SCAN, BigDecimal.ZERO, false);
+                    tempFile.toString(), BigDecimal.ZERO, false);
 
             if (players.isEmpty()) {
                 Files.deleteIfExists(tempFile);
@@ -72,8 +67,7 @@ public class FantaController {
             LOGGER.info("Parsed file {}: {} players, {} matchdays, token={}",
                     file.getOriginalFilename(), playerCount, matchdayCount, token);
 
-            Map<String, int[]> standingsData = ResultsParser.readStandings(
-                    tempFile.toString(), MAX_PLAYERS_SCAN);
+            Map<String, int[]> standingsData = ResultsParser.readStandings(tempFile.toString());
 
             ParseResult result = new ParseResult();
             result.token = token;
@@ -145,7 +139,7 @@ public class FantaController {
                     "Sessione scaduta o non trovata. Carica di nuovo il file.");
         }
         try {
-            ResultsParser.readExcel(session.tempFile.toString(), session.playerCount,
+            ResultsParser.readExcel(session.tempFile.toString(),
                     homeAdvantage, true, goalLimit, goalOffset);
             LOGGER.info("Validation OK: token={} homeAdvantage={} goalLimit={} goalOffset={}",
                     token, homeAdvantage, goalLimit, goalOffset);
@@ -186,7 +180,7 @@ public class FantaController {
                     session.playerCount, homeAdvantage, goalLimit, goalOffset, threads, permutationLimit);
 
             Map<String, Player> players = ResultsParser.readExcel(
-                    session.tempFile.toString(), session.playerCount, homeAdvantage, false);
+                    session.tempFile.toString(), homeAdvantage, false);
             CalendarPermutator permutator = new CalendarPermutator(players, homeAdvantage, goalLimit, goalOffset);
             PartialResult result = permutator.computePermutations(permutationLimit, threads);
 
