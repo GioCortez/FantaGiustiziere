@@ -44,10 +44,18 @@ public class Partita {
 
 	public void calculate(Integer numeroGiornata) {
 		punteggioCasa = casa.getResults().get(numeroGiornata);
+		if (punteggioCasa == null) {
+			throw new IllegalStateException(String.format(
+					"Punteggio mancante per '%s' alla giornata %d", casa.getName(), numeroGiornata));
+		}
 		if (!giornata.isNeutral()) {
 			punteggioCasa = punteggioCasa.add(giornata.getCampionato().getHomeAdvantage());
 		}
 		punteggioTrasf = trasferta.getResults().get(numeroGiornata);
+		if (punteggioTrasf == null) {
+			throw new IllegalStateException(String.format(
+					"Punteggio mancante per '%s' alla giornata %d", trasferta.getName(), numeroGiornata));
+		}
 		int goalLimit  = giornata.getCampionato().getGoalLimit();
 		int goalOffset = giornata.getCampionato().getGoalOffset();
 		goalCasa  = getGoals(punteggioCasa,  goalLimit, goalOffset);

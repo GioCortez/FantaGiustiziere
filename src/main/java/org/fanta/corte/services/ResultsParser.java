@@ -7,8 +7,11 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
@@ -220,9 +223,23 @@ public class ResultsParser {
 			}
 
 			for (Entry<String, Player> entry : fantagiocatori.entrySet()) {
-				LOGGER.info("{} {}", entry.getKey(), entry.getValue().getName());
+				LOGGER.debug("{} {}", entry.getKey(), entry.getValue().getName());
 				for (Entry<Integer, BigDecimal> res : entry.getValue().getResults().entrySet()) {
-					LOGGER.info("{} {}", res.getKey(), res.getValue());
+					LOGGER.debug("{} {}", res.getKey(), res.getValue());
+				}
+			}
+
+			// ── Pass 3: completeness check — every player must have a score for every matchday ──
+			Set<Integer> allGiornate = fantagiocatori.values().stream()
+					.flatMap(p -> p.getResults().keySet().stream())
+					.collect(Collectors.toSet());
+			for (Entry<String, Player> entry : fantagiocatori.entrySet()) {
+				Set<Integer> missing = new TreeSet<>(allGiornate);
+				missing.removeAll(entry.getValue().getResults().keySet());
+				if (!missing.isEmpty()) {
+					throw new IllegalStateException(String.format(
+							"Giocatore '%s' manca del punteggio per le giornate: %s",
+							entry.getKey(), missing));
 				}
 			}
 

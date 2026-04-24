@@ -285,12 +285,12 @@ public class CalendarPermutator {
 	private void logStatistics(PartialResult result, long permutationLimits) {
 		for (Entry<Player, long[]> entry : result.statistics.entrySet()) {
 			long[] totals = entry.getValue();
-			LOGGER.info("Relative Statistics for: {} -> {}", entry.getKey(), totals);
+			LOGGER.debug("Relative Statistics for: {} -> {}", entry.getKey(), totals);
 			int[] percent = new int[totals.length];
 			for (int i = 0; i < totals.length; i++) {
 				percent[i] = (int) (totals[i] * 100.0 / result.permutationCounter + 0.5);
 			}
-			LOGGER.info("Percent Statistics for : {} -> {}", entry.getKey(), percent);
+			LOGGER.debug("Percent Statistics for : {} -> {}", entry.getKey(), percent);
 		}
 	}
 

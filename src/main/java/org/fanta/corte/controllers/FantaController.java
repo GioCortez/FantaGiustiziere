@@ -133,6 +133,9 @@ public class FantaController {
             @RequestParam(defaultValue = "66") int goalLimit,
             @RequestParam(defaultValue = "6")  int goalOffset
     ) throws IOException {
+        if (goalLimit < 66) {
+            return ResponseEntity.badRequest().body("La soglia gol non può essere inferiore a 66.");
+        }
         if (goalOffset <= 0) {
             return ResponseEntity.badRequest().body("L'intervallo gol deve essere un intero maggiore di 0.");
         }
@@ -166,6 +169,9 @@ public class FantaController {
             @RequestParam(defaultValue = "66") int goalLimit,
             @RequestParam(defaultValue = "6")  int goalOffset
     ) throws IOException {
+        if (goalLimit < 66) {
+            return ResponseEntity.badRequest().body("La soglia gol non può essere inferiore a 66.");
+        }
         if (goalOffset <= 0) {
             return ResponseEntity.badRequest().body("L'intervallo gol deve essere un intero maggiore di 0.");
         }
