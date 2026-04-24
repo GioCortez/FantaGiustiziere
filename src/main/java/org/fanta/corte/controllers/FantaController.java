@@ -107,6 +107,8 @@ public class FantaController {
                     })
                     .collect(Collectors.toList());
 
+            result.matches = ResultsParser.readMatchRecords(tempFile.toString());
+
             return ResponseEntity.ok(result);
 
         } catch (InvalidFormatException | IllegalArgumentException | IllegalStateException e) {

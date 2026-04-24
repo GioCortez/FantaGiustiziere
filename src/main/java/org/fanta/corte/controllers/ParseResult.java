@@ -2,6 +2,8 @@ package org.fanta.corte.controllers;
 
 import java.util.List;
 
+import org.fanta.corte.services.ResultsParser;
+
 public class ParseResult {
 
     public String token;
@@ -9,6 +11,7 @@ public class ParseResult {
     public int matchdayCount;
     public List<PlayerSummary> players;
     public List<StandingRow> standings;
+    public List<ResultsParser.MatchRecord> matches;
 
     public static class PlayerSummary {
         public String name;

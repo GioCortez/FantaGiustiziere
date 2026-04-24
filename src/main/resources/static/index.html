@@ -328,6 +328,119 @@
     .rank-3 { background: rgba(180,120,60,0.15); color: #c8956c; font-weight: 600; }
     .rank-other { color: #475569; }
     .pct-bar { display: block; font-size: 0.68rem; margin-top: 1px; color: #475569; }
+
+    /* ── Tabs (step 5) ───────────────────────────────────────────────── */
+    .tab-bar {
+      display: flex;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      margin-bottom: 1.5rem;
+    }
+    .tab-btn {
+      padding: 0.55rem 1.1rem;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: #475569;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+      margin-bottom: -1px;
+      white-space: nowrap;
+    }
+    .tab-btn:hover { color: #94a3b8; }
+    .tab-btn.active { color: #f7c948; border-bottom-color: #f7c948; }
+    .tab-badge {
+      display: inline-block;
+      background: #166534;
+      color: #86efac;
+      font-size: 0.62rem;
+      font-weight: 700;
+      border-radius: 10px;
+      padding: 1px 6px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+
+    /* ── HA Slider (tab 1) ───────────────────────────────────────────── */
+    .ha-slider-wrap {
+      margin-bottom: 1.5rem;
+      padding: 1rem 1.25rem;
+      background: rgba(247,201,72,0.05);
+      border: 1px solid rgba(247,201,72,0.12);
+      border-radius: 8px;
+    }
+    .ha-slider-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+    .ha-slider-label {
+      font-size: 0.875rem;
+      color: #94a3b8;
+    }
+    .ha-value-display {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #f7c948;
+      line-height: 1;
+    }
+    .ha-value-display span {
+      font-size: 0.85rem;
+      font-weight: 400;
+      color: #64748b;
+      margin-left: 2px;
+    }
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: #1e293b;
+      cursor: pointer;
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: #f7c948;
+      cursor: pointer;
+      box-shadow: 0 0 8px rgba(247,201,72,0.45);
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: #f7c948;
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 0 8px rgba(247,201,72,0.45);
+    }
+    .ha-minmax {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.7rem;
+      color: #334155;
+      margin-top: 0.3rem;
+    }
+    .ha-configured-note {
+      font-size: 0.75rem;
+      color: #475569;
+      margin-top: 0.6rem;
+    }
+    .ha-configured-note strong { color: #94a3b8; }
+
+    /* ── Tab 2 inline spinner ────────────────────────────────────────── */
+    .inline-spinner-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      padding: 3rem 0;
+    }
   </style>
 </head>
 <body>
@@ -533,29 +646,111 @@
         <button class="btn btn-secondary" id="btnBackTo3">← Indietro</button>
         <button class="btn btn-primary" id="btnRun">Avvia calcolo</button>
       </div>
-
-      <div class="loading-overlay" id="step4Loading" hidden>
-        <div class="spinner"></div>
-        <div class="loading-text">Calcolo in corso…<br><span style="font-size:0.78rem;color:#475569">Con tante permutazioni può volerci qualche minuto</span></div>
-      </div>
     </div>
   </div>
 
-  <!-- ── Step 5: Results ──────────────────────────────────────────── -->
+  <!-- ── Step 5: Results (tabbed) ─────────────────────────────────── -->
   <div id="step5" hidden>
     <div class="card">
-      <div class="card-title">Risultati</div>
-      <div class="card-subtitle">Frequenza di ogni posizione finale per ciascun giocatore</div>
 
-      <div class="meta-row">
-        <div>Permutazioni calcolate: <strong id="permCount">—</strong></div>
-        <div>Giocatori: <strong id="resultPlayerCount">—</strong></div>
+      <!-- Tab bar -->
+      <div class="tab-bar">
+        <button class="tab-btn active" id="tab1Btn">📊 Classifica simulata</button>
+        <button class="tab-btn"        id="tab2Btn">🔁 Calendario inverso</button>
+        <button class="tab-btn"        id="tab3Btn">📈 Analisi permutazioni</button>
       </div>
 
-      <div class="table-wrap">
-        <table id="statsTable"></table>
+      <!-- ── Tab 1: live standings simulator ──────────────────────── -->
+      <div id="tab1Content">
+        <div class="card-subtitle">Trascina il cursore per simulare la classifica con diversi valori di vantaggio campo — aggiorna anche il Calendario inverso</div>
+
+        <div class="ha-slider-wrap">
+          <div class="ha-slider-header">
+            <span class="ha-slider-label">Vantaggio campo casa</span>
+            <span class="ha-value-display" id="haDisplay">2.0<span>pt</span></span>
+          </div>
+          <input type="range" id="haSlider" min="0" max="10" step="0.5" value="2">
+          <div class="ha-minmax"><span>0 pt</span><span>5 pt</span><span>10 pt</span></div>
+          <div class="ha-configured-note">
+            Valore configurato per il calcolo: <strong id="haConfiguredNote">2.0 pt</strong>
+          </div>
+        </div>
+
+        <div class="standings-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th class="col-name">Giocatore</th>
+                <th title="Partite giocate">PG</th>
+                <th title="Vinte">V</th>
+                <th title="Nulle">N</th>
+                <th title="Perse">P</th>
+                <th title="Gol fatti">G+</th>
+                <th title="Gol subiti">G-</th>
+                <th title="Differenza reti">DR</th>
+                <th title="Punti classifica">Pti</th>
+                <th title="Punteggio totale fantacalcio">Punteggio</th>
+              </tr>
+            </thead>
+            <tbody id="simStandingsBody"></tbody>
+          </table>
+        </div>
       </div>
 
+      <!-- ── Tab 2: reverse calendar ──────────────────────────────── -->
+      <div id="tab2Content" hidden>
+        <div class="card-subtitle">Classifica simulata con casa e trasferta invertite — il vantaggio campo si applica ai giocatori che originariamente giocavano in trasferta</div>
+
+        <div class="standings-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th class="col-name">Giocatore</th>
+                <th title="Partite giocate">PG</th>
+                <th title="Vinte">V</th>
+                <th title="Nulle">N</th>
+                <th title="Perse">P</th>
+                <th title="Gol fatti">G+</th>
+                <th title="Gol subiti">G-</th>
+                <th title="Differenza reti">DR</th>
+                <th title="Punti classifica">Pti</th>
+                <th title="Punteggio totale fantacalcio">Punteggio</th>
+              </tr>
+            </thead>
+            <tbody id="revStandingsBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── Tab 3: permutation results ───────────────────────────── -->
+      <div id="tab3Content" hidden>
+
+        <!-- Spinner while /run is in flight -->
+        <div id="step5Spinner" class="inline-spinner-wrap">
+          <div class="spinner"></div>
+          <div class="loading-text">
+            Calcolo permutazioni in corso…<br>
+            <span style="font-size:0.78rem;color:#475569">Con tante permutazioni può volerci qualche minuto</span>
+          </div>
+        </div>
+
+        <!-- Results (shown when /run completes) -->
+        <div id="step5Results" hidden>
+          <div class="meta-row">
+            <div>Permutazioni calcolate: <strong id="permCount">—</strong></div>
+            <div>Giocatori: <strong id="resultPlayerCount">—</strong></div>
+          </div>
+          <div class="table-wrap">
+            <table id="statsTable"></table>
+          </div>
+        </div>
+
+        <div id="step5Error" class="error-box" hidden></div>
+      </div>
+
+      <!-- Restart always visible at the bottom -->
       <div class="btn-row">
         <button class="btn btn-secondary" id="btnRestart">↺ Ricomincia</button>
       </div>
@@ -573,6 +768,7 @@
     homeAdvantage: 2,
     goalLimit: 66,
     goalOffset: 6,
+    matches: [],
   };
 
   // ── Step navigation ──────────────────────────────────────────────────────
@@ -588,6 +784,17 @@
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
+
+  // ── Tab switching (step 5) ───────────────────────────────────────────────
+  function switchTab(n) {
+    [1, 2, 3].forEach(i => {
+      document.getElementById('tab' + i + 'Content').hidden = (i !== n);
+      document.getElementById('tab' + i + 'Btn').classList.toggle('active', i === n);
+    });
+  }
+  document.getElementById('tab1Btn').addEventListener('click', () => switchTab(1));
+  document.getElementById('tab2Btn').addEventListener('click', () => switchTab(2));
+  document.getElementById('tab3Btn').addEventListener('click', () => switchTab(3));
 
   // ── Step 1: file selection & parse ──────────────────────────────────────
   const fileInput    = document.getElementById('fileInput');
@@ -615,6 +822,7 @@
       state.token         = body.token;
       state.playerCount   = body.playerCount;
       state.matchdayCount = body.matchdayCount;
+      state.matches       = body.matches || [];
 
       // Populate step 2
       document.getElementById('s2PlayerCount').textContent   = body.playerCount;
@@ -683,9 +891,8 @@
   });
 
   // ── Step 4: run ──────────────────────────────────────────────────────────
-  const step4Loading = document.getElementById('step4Loading');
-  const step4Error   = document.getElementById('step4Error');
-  const btnRun       = document.getElementById('btnRun');
+  const step4Error = document.getElementById('step4Error');
+  const btnRun     = document.getElementById('btnRun');
 
   document.getElementById('btnBackTo3').addEventListener('click', () => {
     step4Error.hidden = true;
@@ -694,11 +901,29 @@
 
   btnRun.addEventListener('click', async () => {
     step4Error.hidden = true;
-    step4Loading.hidden = false;
     btnRun.disabled = true;
 
     const threads = document.querySelector('input[name="threads"]:checked').value;
 
+    // ── Immediately show step 5 with Tab 1 ready ──────────────────────────
+    const ha = state.homeAdvantage;
+    const haSlider = document.getElementById('haSlider');
+    haSlider.value = ha;
+    updateSliderTrack(haSlider);
+    document.getElementById('haDisplay').innerHTML = ha.toFixed(1) + '<span>pt</span>';
+    document.getElementById('haConfiguredNote').textContent = ha.toFixed(1) + ' pt';
+    renderSimulatedStandings(computeSimulatedStandings(state.matches, ha, state.goalLimit, state.goalOffset));
+    renderReverseStandings(computeReverseStandings(state.matches, ha, state.goalLimit, state.goalOffset));
+
+    // Reset Tab 3 to spinner state
+    document.getElementById('step5Spinner').hidden  = false;
+    document.getElementById('step5Results').hidden  = true;
+    document.getElementById('step5Error').hidden    = true;
+    document.getElementById('tab3Btn').innerHTML    = '📈 Analisi permutazioni';
+    switchTab(1);
+    goTo(5);
+
+    // ── Fire /run in the background ───────────────────────────────────────
     try {
       const body = new URLSearchParams({
         token:            state.token,
@@ -712,23 +937,199 @@
       if (!resp.ok) throw new Error(await resp.text() || `Errore HTTP ${resp.status}`);
 
       renderResults(await resp.json());
-      goTo(5);
+      document.getElementById('step5Spinner').hidden = true;
+      document.getElementById('step5Results').hidden = false;
+      // Add a badge to the Tab 3 button to signal results are ready
+      document.getElementById('tab3Btn').innerHTML =
+        '📈 Analisi permutazioni <span class="tab-badge">pronto</span>';
     } catch (err) {
-      step4Error.textContent = 'Errore: ' + err.message;
-      step4Error.hidden = false;
-    } finally {
-      step4Loading.hidden = true;
-      btnRun.disabled = false;
+      document.getElementById('step5Spinner').hidden = true;
+      document.getElementById('step5Error').textContent = 'Errore nel calcolo: ' + err.message;
+      document.getElementById('step5Error').hidden = false;
+      document.getElementById('tab3Btn').innerHTML =
+        '📈 Analisi permutazioni <span class="tab-badge" style="background:#7f1d1d;color:#fca5a5">errore</span>';
     }
   });
 
-  // ── Step 5: results & restart ────────────────────────────────────────────
+  // ── HA Slider ────────────────────────────────────────────────────────────
+  const haSliderEl = document.getElementById('haSlider');
+
+  haSliderEl.addEventListener('input', () => {
+    const ha = parseFloat(haSliderEl.value);
+    updateSliderTrack(haSliderEl);
+    document.getElementById('haDisplay').innerHTML = ha.toFixed(1) + '<span>pt</span>';
+    renderSimulatedStandings(computeSimulatedStandings(state.matches, ha, state.goalLimit, state.goalOffset));
+    renderReverseStandings(computeReverseStandings(state.matches, ha, state.goalLimit, state.goalOffset));
+  });
+
+  function updateSliderTrack(slider) {
+    const pct = ((slider.value - slider.min) / (slider.max - slider.min)) * 100;
+    slider.style.background =
+      `linear-gradient(to right, #f7c948 ${pct}%, #1e293b ${pct}%)`;
+  }
+
+  // ── Step 5: restart ──────────────────────────────────────────────────────
   document.getElementById('btnRestart').addEventListener('click', () => {
     fileInput.value = '';
     btnAnalyze.disabled = true;
     step1Error.hidden = true;
+    btnRun.disabled = false;
     goTo(1);
   });
+
+  // ── Client-side standings simulation ─────────────────────────────────────
+
+  /**
+   * Mirrors Partita.getGoals(): 0 goals below threshold,
+   * then 1 + floor((score - goalLimit) / goalOffset).
+   */
+  function getGoals(score, goalLimit, goalOffset) {
+    if (score < goalLimit) return 0;
+    return 1 + Math.floor((score - goalLimit) / goalOffset);
+  }
+
+  /**
+   * Computes league standings from raw match records for a given home advantage.
+   * Home scores in the records are raw Excel values; HA is added here (unless neutral).
+   */
+  function computeSimulatedStandings(matches, ha, goalLimit, goalOffset) {
+    // The raw Excel home score already has the configured HA baked in for non-neutral legs
+    // (validation passes only when getGoals(colB) matches the goal result column).
+    // To simulate with a different HA we must strip the original and add the new one.
+    const origHA = state.homeAdvantage;
+    const p = {};
+    function init(name) {
+      if (!p[name]) p[name] = { player: name, points: 0, won: 0, drawn: 0, lost: 0,
+                                 goalsFor: 0, goalsAgainst: 0, totalScore: 0 };
+    }
+    for (const m of matches) {
+      init(m.homePlayer);
+      init(m.awayPlayer);
+      // totalScore = raw colB value, same as step 2 (readExcel uses homeAddition=0 at /parse time,
+      // so Player stores colB directly and getTotalPoints() sums colB for all legs)
+      p[m.homePlayer].totalScore += m.homeScore;
+      p[m.awayPlayer].totalScore += m.awayScore;
+
+      const effectiveHome = m.neutral ? m.homeScore : (m.homeScore - origHA + ha);
+      const hg = getGoals(effectiveHome, goalLimit, goalOffset);
+      const ag = getGoals(m.awayScore,   goalLimit, goalOffset);
+
+      p[m.homePlayer].goalsFor     += hg;  p[m.homePlayer].goalsAgainst += ag;
+      p[m.awayPlayer].goalsFor     += ag;  p[m.awayPlayer].goalsAgainst += hg;
+
+      if (hg > ag) {
+        p[m.homePlayer].points += 3; p[m.homePlayer].won++;  p[m.awayPlayer].lost++;
+      } else if (hg < ag) {
+        p[m.awayPlayer].points += 3; p[m.awayPlayer].won++;  p[m.homePlayer].lost++;
+      } else {
+        p[m.homePlayer].points++;    p[m.homePlayer].drawn++;
+        p[m.awayPlayer].points++;    p[m.awayPlayer].drawn++;
+      }
+    }
+    return Object.values(p).sort((a, b) => {
+      if (b.points !== a.points) return b.points - a.points;
+      const adr = a.goalsFor - a.goalsAgainst, bdr = b.goalsFor - b.goalsAgainst;
+      if (bdr !== adr) return bdr - adr;
+      return b.totalScore - a.totalScore;
+    });
+  }
+
+  /**
+   * Computes standings with home and away swapped for every match.
+   * m.homeScore = colB = pureHomeScore + origHA (non-neutral) or pureHomeScore (neutral).
+   * m.awayScore = colC = pureAwayScore (never has HA baked in).
+   * After reversal:
+   *   new home = original away → effective score = m.awayScore + ha  (add slider HA)
+   *   new away = original home → effective score = m.homeScore - origHA  (strip baked-in HA)
+   * Neutral legs: neither side gets HA regardless of slider.
+   */
+  function computeReverseStandings(matches, ha, goalLimit, goalOffset) {
+    const origHA = state.homeAdvantage;
+    const p = {};
+    function init(name) {
+      if (!p[name]) p[name] = { player: name, points: 0, won: 0, drawn: 0, lost: 0,
+                                 goalsFor: 0, goalsAgainst: 0, totalScore: 0 };
+    }
+    for (const m of matches) {
+      init(m.homePlayer);
+      init(m.awayPlayer);
+      // totalScore: each player's own raw score (unchanged by reversal)
+      p[m.homePlayer].totalScore += m.homeScore;
+      p[m.awayPlayer].totalScore += m.awayScore;
+
+      // In the reversed match: m.awayPlayer is home, m.homePlayer is away
+      const effectiveNewHome = m.neutral ? m.awayScore : (m.awayScore + ha);
+      const effectiveNewAway = m.neutral ? m.homeScore : (m.homeScore - origHA);
+
+      const hg = getGoals(effectiveNewHome, goalLimit, goalOffset);
+      const ag = getGoals(effectiveNewAway, goalLimit, goalOffset);
+
+      // m.awayPlayer is now the home side
+      p[m.awayPlayer].goalsFor     += hg;  p[m.awayPlayer].goalsAgainst += ag;
+      p[m.homePlayer].goalsFor     += ag;  p[m.homePlayer].goalsAgainst += hg;
+
+      if (hg > ag) {
+        p[m.awayPlayer].points += 3; p[m.awayPlayer].won++;  p[m.homePlayer].lost++;
+      } else if (hg < ag) {
+        p[m.homePlayer].points += 3; p[m.homePlayer].won++;  p[m.awayPlayer].lost++;
+      } else {
+        p[m.awayPlayer].points++;    p[m.awayPlayer].drawn++;
+        p[m.homePlayer].points++;    p[m.homePlayer].drawn++;
+      }
+    }
+    return Object.values(p).sort((a, b) => {
+      if (b.points !== a.points) return b.points - a.points;
+      const adr = a.goalsFor - a.goalsAgainst, bdr = b.goalsFor - b.goalsAgainst;
+      if (bdr !== adr) return bdr - adr;
+      return b.totalScore - a.totalScore;
+    });
+  }
+
+  function renderReverseStandings(rows) {
+    document.getElementById('revStandingsBody').innerHTML = rows.map((s, i) => {
+      const dr      = s.goalsFor - s.goalsAgainst;
+      const drClass = dr > 0 ? 'col-dr-pos' : dr < 0 ? 'col-dr-neg' : '';
+      const drText  = (dr > 0 ? '+' : '') + dr;
+      const played  = s.won + s.drawn + s.lost;
+      return `<tr>
+        <td class="col-rank">${i + 1}</td>
+        <td class="col-name">${esc(s.player)}</td>
+        <td>${played}</td>
+        <td>${s.won}</td>
+        <td>${s.drawn}</td>
+        <td>${s.lost}</td>
+        <td>${s.goalsFor}</td>
+        <td>${s.goalsAgainst}</td>
+        <td class="${drClass}">${drText}</td>
+        <td class="col-pts">${s.points}</td>
+        <td>${s.totalScore.toLocaleString('it-IT', {maximumFractionDigits: 1})}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  function renderSimulatedStandings(rows) {
+    document.getElementById('simStandingsBody').innerHTML = rows.map((s, i) => {
+      const dr      = s.goalsFor - s.goalsAgainst;
+      const drClass = dr > 0 ? 'col-dr-pos' : dr < 0 ? 'col-dr-neg' : '';
+      const drText  = (dr > 0 ? '+' : '') + dr;
+      const played  = s.won + s.drawn + s.lost;
+      return `<tr>
+        <td class="col-rank">${i + 1}</td>
+        <td class="col-name">${esc(s.player)}</td>
+        <td>${played}</td>
+        <td>${s.won}</td>
+        <td>${s.drawn}</td>
+        <td>${s.lost}</td>
+        <td>${s.goalsFor}</td>
+        <td>${s.goalsAgainst}</td>
+        <td class="${drClass}">${drText}</td>
+        <td class="col-pts">${s.points}</td>
+        <td>${s.totalScore.toLocaleString('it-IT', {maximumFractionDigits: 1})}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  // ── Render helpers ────────────────────────────────────────────────────────
 
   function renderStandings(rows) {
     const tbody = document.getElementById('standingsBody');

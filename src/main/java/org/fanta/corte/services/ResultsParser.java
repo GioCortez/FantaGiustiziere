@@ -3,8 +3,10 @@ package org.fanta.corte.services;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -316,6 +318,110 @@ public class ResultsParser {
 				}
 			}
 			return standings;
+		}
+	}
+
+	// ── Match records ────────────────────────────────────────────────────────
+
+	/** One match as read from the Excel: raw (unadjusted) home and away scores plus neutral flag. */
+	public static class MatchRecord {
+		public int    giornata;
+		public String homePlayer;
+		public String awayPlayer;
+		public double homeScore; // raw Excel score — no home-advantage adjustment
+		public double awayScore;
+		public boolean neutral;  // true when the leg is played at neutral ground (no HA)
+	}
+
+	/**
+	 * Reads every match from the Excel and returns raw per-match records.
+	 * Home scores are returned as-is from the Excel (no HA stripped or added).
+	 * The neutral flag reflects the same odd-leg detection logic used by readExcel.
+	 */
+	public static List<MatchRecord> readMatchRecords(String excelPath)
+			throws InvalidFormatException, IOException {
+		try (Workbook workbook = WorkbookFactory.create(new File(excelPath))) {
+			Sheet sheet = workbook.getSheetAt(0);
+			DataFormatter dataFormatter = new DataFormatter();
+			List<MatchRecord> records = new ArrayList<>();
+
+			// ── Pass 1: detect season structure (same logic as readExcel) ────────
+			int maxGiornata = 0;
+			int homePlayersInFirstLeg = 0;
+			int firstLegDataRow = -1, firstLegDataCol = -1;
+
+			for (Row scanRow : sheet) {
+				for (Cell scanCell : scanRow) {
+					String val = dataFormatter.formatCellValue(scanCell);
+					if (val.contains("Giornata lega")) {
+						Matcher sm = DAYTITLEPATTERN.matcher(val);
+						int num = -1;
+						while (sm.find()) num = Integer.parseInt(sm.group(0));
+						if (num > maxGiornata) maxGiornata = num;
+						if (num == 1 && firstLegDataRow < 0) {
+							firstLegDataRow = scanCell.getRowIndex() + 1;
+							firstLegDataCol = scanCell.getColumnIndex();
+						}
+					}
+				}
+			}
+			if (firstLegDataRow >= 0) {
+				for (int i = 0; ; i++) {
+					Row r = sheet.getRow(firstLegDataRow + i);
+					if (r == null) break;
+					Cell c = r.getCell(firstLegDataCol);
+					String name = dataFormatter.formatCellValue(c).trim();
+					if (name.isEmpty() || name.contains("Giornata")) break;
+					homePlayersInFirstLeg++;
+				}
+			}
+			int detectedPlayerCount = homePlayersInFirstLeg * 2;
+			int legSize             = detectedPlayerCount > 1 ? detectedPlayerCount - 1 : 1;
+			int totalLegs           = maxGiornata > 0 ? (int) Math.ceil((double) maxGiornata / legSize) : 1;
+			int legsWithAdvantage   = (totalLegs <= 1 || totalLegs % 2 == 0) ? totalLegs : totalLegs - 1;
+			int resultRows          = detectedPlayerCount > 0 ? detectedPlayerCount / 2 - 1 : 200;
+
+			// ── Pass 2: read match records ────────────────────────────────────────
+			Iterator<Row> rowIterator = sheet.rowIterator();
+			while (rowIterator.hasNext()) {
+				Row row = rowIterator.next();
+				Iterator<Cell> cellIterator = row.cellIterator();
+				while (cellIterator.hasNext()) {
+					Cell cell = cellIterator.next();
+					String cellValue = dataFormatter.formatCellValue(cell);
+					if (!cellValue.contains("Giornata lega")) continue;
+
+					Matcher matcher = DAYTITLEPATTERN.matcher(cellValue);
+					Integer giornataNumero = null;
+					while (matcher.find()) giornataNumero = Integer.parseInt(matcher.group(0));
+					if (giornataNumero == null) continue;
+
+					int currentRow    = cell.getRowIndex() + 1;
+					int currentColumn = cell.getColumnIndex();
+					int legIndex      = (giornataNumero - 1) / legSize;
+					// neutral = no home advantage; mirrors !hasHomeAdv in readExcel
+					boolean neutral   = detectedPlayerCount == 0 || legIndex >= legsWithAdvantage;
+
+					for (int i = 0; i <= resultRows; i++) {
+						Row dataRow = sheet.getRow(currentRow + i);
+						if (dataRow == null) break;
+						String homeName = dataFormatter.formatCellValue(dataRow.getCell(currentColumn)).trim();
+						if (homeName.isEmpty() || homeName.contains("Giornata")) break;
+						String awayName = dataFormatter.formatCellValue(dataRow.getCell(currentColumn + 3)).trim();
+						if (awayName.isEmpty() || awayName.contains("Giornata")) break;
+
+						MatchRecord mr = new MatchRecord();
+						mr.giornata   = giornataNumero;
+						mr.homePlayer = homeName;
+						mr.awayPlayer = awayName;
+						mr.homeScore  = readScore(dataRow.getCell(currentColumn + 1), dataFormatter).doubleValue();
+						mr.awayScore  = readScore(dataRow.getCell(currentColumn + 2), dataFormatter).doubleValue();
+						mr.neutral    = neutral;
+						records.add(mr);
+					}
+				}
+			}
+			return records;
 		}
 	}
 
