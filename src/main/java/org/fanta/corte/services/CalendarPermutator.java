@@ -140,6 +140,7 @@ public class CalendarPermutator {
 		try {
 			executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
 		} catch (InterruptedException e) {
+			executor.shutdownNow();
 			Thread.currentThread().interrupt();
 			LOGGER.warn("Multi-thread execution interrupted");
 		}
@@ -164,6 +165,8 @@ public class CalendarPermutator {
 	}
 
 	private void mergeInto(PartialResult target, PartialResult source) {
+		LOGGER.debug("Merging partial result: {} permutations, {} players tracked",
+				source.permutationCounter, source.statistics.size());
 		target.permutationCounter += source.permutationCounter;
 
 		// Sum position-frequency arrays element-by-element for each player.

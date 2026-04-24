@@ -127,6 +127,9 @@ public class FantaController {
             @RequestParam(defaultValue = "66") int goalLimit,
             @RequestParam(defaultValue = "6")  int goalOffset
     ) throws IOException {
+        if (homeAdvantage.compareTo(BigDecimal.ZERO) < 0) {
+            return ResponseEntity.badRequest().body("Il vantaggio casalingo non può essere negativo.");
+        }
         if (goalLimit < 66) {
             return ResponseEntity.badRequest().body("La soglia gol non può essere inferiore a 66.");
         }
@@ -163,6 +166,9 @@ public class FantaController {
             @RequestParam(defaultValue = "66") int goalLimit,
             @RequestParam(defaultValue = "6")  int goalOffset
     ) throws IOException {
+        if (homeAdvantage.compareTo(BigDecimal.ZERO) < 0) {
+            return ResponseEntity.badRequest().body("Il vantaggio casalingo non può essere negativo.");
+        }
         if (goalLimit < 66) {
             return ResponseEntity.badRequest().body("La soglia gol non può essere inferiore a 66.");
         }

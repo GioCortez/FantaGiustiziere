@@ -50,6 +50,16 @@ class CalendarPermutatorTest {
     }
 
     @Test
+    void permutationLimitIsEnforced() {
+        // 4! = 24 total; a limit of 5 must stop early and report exactly 5 processed.
+        int limit = 5;
+        PartialResult result = new CalendarPermutator(createPlayers(), HOME_ADVANTAGE)
+                .computePermutations(limit, 1); // single-thread for determinism
+        assertEquals(limit, result.permutationCounter,
+                "Should process exactly 'limit' permutations before stopping");
+    }
+
+    @Test
     void singleAndMultiThreadProduceSameStatistics() {
         // Run single-thread (limit=-1 → all 24 permutations)
         PartialResult single = new CalendarPermutator(createPlayers(), HOME_ADVANTAGE)

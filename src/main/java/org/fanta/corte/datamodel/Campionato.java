@@ -24,11 +24,6 @@ public class Campionato {
 		this.goalOffset = goalOffset;
 	}
 
-	/** Backward-compatible constructor — uses default goal thresholds (66, step 6). */
-	public Campionato(BigDecimal homeAdvantage) {
-		this(homeAdvantage, 66, 6);
-	}
-
 	public List<Giornata> getGiornate() {
 		if (giornate == null) {
 			giornate = new ArrayList<>();
