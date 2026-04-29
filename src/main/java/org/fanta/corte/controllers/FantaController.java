@@ -12,6 +12,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.fanta.corte.datamodel.Player;
 import org.fanta.corte.services.CalendarPermutator;
 import org.fanta.corte.services.CalendarPermutator.PartialResult;
@@ -43,7 +44,7 @@ public class FantaController {
     // -------------------------------------------------------------------------
 
     @PostMapping(value = "/parse", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> parse(@RequestParam("file") MultipartFile file) throws IOException {
+    public ResponseEntity<?> parse(@RequestParam("file") MultipartFile file) throws IOException, InvalidFormatException {
 
         Path tempFile = Files.createTempFile("fanta-", ".xlsx");
         boolean sessionCreated = false;
@@ -132,7 +133,7 @@ public class FantaController {
             @RequestParam(defaultValue = "2")  BigDecimal homeAdvantage,
             @RequestParam(defaultValue = "66") int goalLimit,
             @RequestParam(defaultValue = "6")  int goalOffset
-    ) throws IOException {
+    ) throws IOException, InvalidFormatException {
         if (homeAdvantage.compareTo(BigDecimal.ZERO) < 0) {
             return ResponseEntity.badRequest().body("Il vantaggio casalingo non può essere negativo.");
         }
@@ -166,7 +167,7 @@ public class FantaController {
             @RequestParam(defaultValue = "-1") long permutationLimit,
             @RequestParam(defaultValue = "66") int goalLimit,
             @RequestParam(defaultValue = "6")  int goalOffset
-    ) throws IOException {
+    ) throws IOException, InvalidFormatException {
         if (homeAdvantage.compareTo(BigDecimal.ZERO) < 0) {
             return ResponseEntity.badRequest().body("Il vantaggio casalingo non può essere negativo.");
         }
