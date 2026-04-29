@@ -18,8 +18,10 @@ import org.fanta.corte.services.CalendarPermutator.PartialResult;
 import org.fanta.corte.services.ResultsParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -27,6 +29,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 public class FantaController {
+
+    @Value("${computation.timeout-minutes:30}")
+    private long computationTimeoutMinutes;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FantaController.class.getSimpleName());
 
@@ -39,7 +44,6 @@ public class FantaController {
 
     @PostMapping(value = "/parse", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> parse(@RequestParam("file") MultipartFile file) throws IOException {
-        evictStaleSessions();
 
         Path tempFile = Files.createTempFile("fanta-", ".xlsx");
         boolean sessionCreated = false;
@@ -184,7 +188,7 @@ public class FantaController {
 
             Map<String, Player> players = ResultsParser.readExcel(
                     session.tempFile.toString(), homeAdvantage, false);
-            CalendarPermutator permutator = new CalendarPermutator(players, homeAdvantage, goalLimit, goalOffset);
+            CalendarPermutator permutator = new CalendarPermutator(players, homeAdvantage, goalLimit, goalOffset, computationTimeoutMinutes);
             PartialResult result = permutator.computePermutations(permutationLimit, threads);
 
             return ResponseEntity.ok(RunResult.from(result));
@@ -202,11 +206,13 @@ public class FantaController {
     // Helpers
     // -------------------------------------------------------------------------
 
-    private void evictStaleSessions() {
+    @Scheduled(fixedDelay = 15 * 60 * 1000) // every 15 minutes
+    void evictStaleSessions() {
         Instant cutoff = Instant.now().minus(1, ChronoUnit.HOURS);
         sessions.entrySet().removeIf(e -> {
             if (e.getValue().createdAt.isBefore(cutoff)) {
                 try { Files.deleteIfExists(e.getValue().tempFile); } catch (IOException ignored) {}
+                LOGGER.info("Evicted stale session, temp file: {}", e.getValue().tempFile);
                 return true;
             }
             return false;

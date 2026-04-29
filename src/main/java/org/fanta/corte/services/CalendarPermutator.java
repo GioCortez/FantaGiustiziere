@@ -38,18 +38,25 @@ public class CalendarPermutator {
 	private final int legsWithAdvantage;
 	private final int goalLimit;
 	private final int goalOffset;
+	private final long timeoutMinutes;
 
-	/** Backward-compatible constructor — uses default goal thresholds (limit=66, offset=6). */
+	/** Backward-compatible constructor — uses default goal thresholds and default timeout. */
 	public CalendarPermutator(Map<String, Player> players, BigDecimal homeAdvantage) {
 		this(players, homeAdvantage, 66, 6);
 	}
 
-	/** Full constructor. */
+	/** Backward-compatible constructor — uses default timeout. */
 	public CalendarPermutator(Map<String, Player> players, BigDecimal homeAdvantage, int goalLimit, int goalOffset) {
+		this(players, homeAdvantage, goalLimit, goalOffset, 30);
+	}
+
+	/** Full constructor. */
+	public CalendarPermutator(Map<String, Player> players, BigDecimal homeAdvantage, int goalLimit, int goalOffset, long timeoutMinutes) {
 		this.players          = players;
 		this.homeAdvantage    = homeAdvantage;
 		this.goalLimit        = goalLimit;
 		this.goalOffset       = goalOffset;
+		this.timeoutMinutes   = timeoutMinutes;
 		this.calendarsToPrint = players.size() - 1;
 
 		int maxGiornata = players.values().stream()
@@ -135,19 +142,27 @@ public class CalendarPermutator {
 			}));
 		}
 
-		// Stop accepting new tasks and wait for all partitions to finish.
+		// Stop accepting new tasks and wait for all partitions to finish (up to timeout).
 		executor.shutdown();
+		boolean completed;
 		try {
-			executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+			completed = executor.awaitTermination(timeoutMinutes, TimeUnit.MINUTES);
 		} catch (InterruptedException e) {
 			executor.shutdownNow();
 			Thread.currentThread().interrupt();
 			LOGGER.warn("Multi-thread execution interrupted");
+			completed = false;
+		}
+		if (!completed) {
+			executor.shutdownNow();
+			LOGGER.warn("Computation timed out after {} minutes — returning partial result", timeoutMinutes);
 		}
 
-		// Combine all per-thread partial results into a single final result.
+		// Combine finished per-thread partial results into a single final result.
+		// After a timeout some futures may still be running; skip those to avoid blocking again.
 		PartialResult merged = new PartialResult();
 		for (Future<PartialResult> future : futures) {
+			if (!future.isDone()) continue;
 			try {
 				mergeInto(merged, future.get());
 			} catch (InterruptedException | ExecutionException e) {
