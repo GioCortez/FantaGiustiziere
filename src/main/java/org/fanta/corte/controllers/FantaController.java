@@ -12,7 +12,6 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.fanta.corte.datamodel.Player;
 import org.fanta.corte.services.CalendarPermutator;
 import org.fanta.corte.services.CalendarPermutator.PartialResult;
@@ -43,6 +42,7 @@ public class FantaController {
         evictStaleSessions();
 
         Path tempFile = Files.createTempFile("fanta-", ".xlsx");
+        boolean sessionCreated = false;
         try {
             file.transferTo(tempFile);
 
@@ -50,7 +50,6 @@ public class FantaController {
                     tempFile.toString(), BigDecimal.ZERO, false);
 
             if (players.isEmpty()) {
-                Files.deleteIfExists(tempFile);
                 return ResponseEntity.badRequest().body(
                         "Nessun giocatore trovato nel file. Verifica che il file sia nel formato corretto.");
             }
@@ -63,6 +62,7 @@ public class FantaController {
 
             String token = UUID.randomUUID().toString();
             sessions.put(token, new ParseSession(tempFile, playerCount, Instant.now()));
+            sessionCreated = true;
 
             LOGGER.info("Parsed file {}: {} players, {} matchdays, token={}",
                     file.getOriginalFilename(), playerCount, matchdayCount, token);
@@ -111,10 +111,10 @@ public class FantaController {
 
             return ResponseEntity.ok(result);
 
-        } catch (InvalidFormatException | IllegalArgumentException | IllegalStateException e) {
-            Files.deleteIfExists(tempFile);
-            LOGGER.error("Error parsing file: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(e.getMessage());
+        } finally {
+            if (!sessionCreated) {
+                Files.deleteIfExists(tempFile);
+            }
         }
     }
 
@@ -143,16 +143,11 @@ public class FantaController {
             return ResponseEntity.badRequest().body(
                     "Sessione scaduta o non trovata. Carica di nuovo il file.");
         }
-        try {
-            ResultsParser.readExcel(session.tempFile.toString(),
-                    homeAdvantage, true, goalLimit, goalOffset);
-            LOGGER.info("Validation OK: token={} homeAdvantage={} goalLimit={} goalOffset={}",
-                    token, homeAdvantage, goalLimit, goalOffset);
-            return ResponseEntity.ok().build();
-        } catch (InvalidFormatException | IllegalArgumentException | IllegalStateException e) {
-            LOGGER.error("Validation error: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        ResultsParser.readExcel(session.tempFile.toString(),
+                homeAdvantage, true, goalLimit, goalOffset);
+        LOGGER.info("Validation OK: token={} homeAdvantage={} goalLimit={} goalOffset={}",
+                token, homeAdvantage, goalLimit, goalOffset);
+        return ResponseEntity.ok().build();
     }
 
     // -------------------------------------------------------------------------
@@ -194,11 +189,12 @@ public class FantaController {
 
             return ResponseEntity.ok(RunResult.from(result));
 
-        } catch (InvalidFormatException | IllegalArgumentException | IllegalStateException e) {
-            LOGGER.error("Error processing request: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(e.getMessage());
         } finally {
-            Files.deleteIfExists(session.tempFile);
+            try {
+                Files.deleteIfExists(session.tempFile);
+            } catch (IOException e) {
+                LOGGER.warn("Could not delete temp file {}: {}", session.tempFile, e.getMessage());
+            }
         }
     }
 
