@@ -50,13 +50,26 @@ class CalendarPermutatorTest {
     }
 
     @Test
-    void permutationLimitIsEnforced() {
+    void permutationLimitIsEnforced_singleThread() {
         // 4! = 24 total; a limit of 5 must stop early and report exactly 5 processed.
         int limit = 5;
         PartialResult result = new CalendarPermutator(createPlayers(), HOME_ADVANTAGE)
-                .computePermutations(limit, 1); // single-thread for determinism
+                .computePermutations(limit, 1);
         assertEquals(limit, result.permutationCounter,
-                "Should process exactly 'limit' permutations before stopping");
+                "Single-thread: should process exactly 'limit' permutations");
+    }
+
+    @Test
+    void permutationLimitIsEnforced_multiThread() {
+        // The bug: with the old code (check AFTER processPermutation) each thread could
+        // process one extra permutation before seeing the throw, so multi-thread runs
+        // produced limit+N results (N = thread count). The fix moves the check BEFORE
+        // processPermutation so the atomic decrement acts as a slot gate.
+        int limit = 5;
+        PartialResult result = new CalendarPermutator(createPlayers(), HOME_ADVANTAGE)
+                .computePermutations(limit, -1); // -1 = auto thread count
+        assertEquals(limit, result.permutationCounter,
+                "Multi-thread: should process exactly 'limit' permutations, not limit+N");
     }
 
     @Test

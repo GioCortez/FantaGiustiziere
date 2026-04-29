@@ -222,10 +222,10 @@ public class CalendarPermutator {
 	 */
 	private void printAllRecursive(int n, String[] elements, int offset, AtomicLong globalLimit, PartialResult result) {
 		if (n == 1) {
-			processPermutation(elements, result);
-			if (globalLimit != null && globalLimit.decrementAndGet() <= 0) {
+			if (globalLimit != null && globalLimit.decrementAndGet() < 0) {
 				throw new LimitReachedException("limit reached!");
 			}
+			processPermutation(elements, result);
 		} else {
 			for (int i = 0; i < n - 1; i++) {
 				printAllRecursive(n - 1, elements, offset, globalLimit, result);
