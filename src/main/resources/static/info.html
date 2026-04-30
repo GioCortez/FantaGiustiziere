@@ -3,228 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <title>FantaGiustiziere — Come funziona</title>
+  <meta name="description" content="La matematica dietro FantaGiustiziere: permutazioni di calendario, algoritmo di Berger e calcolo della probabilità di vittoria nel Fantacalcio.">
+  <meta property="og:type"        content="website">
+  <meta property="og:site_name"   content="FantaGiustiziere">
+  <meta property="og:locale"      content="it_IT">
+  <meta property="og:url"         content="https://PRODUCTION_URL/info.html">
+  <meta property="og:title"       content="FantaGiustiziere — Come funziona">
+  <meta property="og:description" content="La matematica dietro FantaGiustiziere: permutazioni di calendario, algoritmo di Berger e calcolo della probabilità di vittoria nel Fantacalcio.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap">
+  <link rel="stylesheet" href="shared.css">
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      color: #e2e8f0;
-      min-height: 100vh;
-    }
-
-    .field-bg {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      z-index: -1;
-    }
-
-    /* ── Sidebar layout ──────────────────────────────────────────────── */
-    .layout { display: flex; min-height: 100vh; }
-
-    .sidebar {
-      width: 260px;
-      flex-shrink: 0;
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      background: linear-gradient(160deg,
-        rgba(3, 10, 5, 0.97) 0%,
-        rgba(5, 14, 8, 0.96) 45%,
-        rgba(7, 12, 18, 0.97) 100%
-      );
-      border-right: 1px solid rgba(247,201,72,0.18);
-      box-shadow: 2px 0 32px rgba(0,0,0,0.75), inset -1px 0 0 rgba(247,201,72,0.08);
-      backdrop-filter: blur(28px);
-      -webkit-backdrop-filter: blur(28px);
-      padding: 2rem 1rem 1.5rem;
-      display: flex;
-      flex-direction: column;
-      z-index: 200;
-      overflow: hidden;
-    }
-    .sidebar::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: repeating-linear-gradient(
-        -55deg,
-        transparent,
-        transparent 14px,
-        rgba(255,255,255,0.012) 14px,
-        rgba(255,255,255,0.012) 16px
-      );
-      pointer-events: none;
-    }
-    .sidebar::after {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 3px;
-      background: linear-gradient(90deg, transparent 5%, rgba(247,201,72,0.75) 50%, transparent 95%);
-    }
-
-    .sidebar-brand {
-      position: relative;
-      text-align: center;
-      padding-bottom: 1.35rem;
-      border-bottom: 1px solid rgba(247,201,72,0.1);
-      margin-bottom: 1.35rem;
-    }
-    .sidebar-logo {
-      font-size: 2.8rem;
-      line-height: 1;
-      margin-bottom: 0.5rem;
-      display: block;
-      filter: drop-shadow(0 0 14px rgba(247,201,72,0.5)) drop-shadow(0 3px 10px rgba(0,0,0,0.7));
-      animation: ball-pulse 3.5s ease-in-out infinite;
-    }
-    @keyframes ball-pulse {
-      0%, 100% { filter: drop-shadow(0 0 10px rgba(247,201,72,0.4)) drop-shadow(0 3px 8px rgba(0,0,0,0.7)); transform: scale(1); }
-      50%       { filter: drop-shadow(0 0 22px rgba(247,201,72,0.65)) drop-shadow(0 4px 14px rgba(0,0,0,0.7)); transform: scale(1.07); }
-    }
-    .sidebar-title {
-      font-family: 'Bebas Neue', 'Impact', sans-serif;
-      font-size: 1.2rem;
-      font-weight: 400;
-      letter-spacing: 0.12em;
-      color: #f7c948;
-      text-shadow: 0 0 24px rgba(247,201,72,0.45), 0 1px 10px rgba(0,0,0,0.9);
-    }
-    .sidebar-subtitle {
-      font-size: 0.6rem;
-      color: rgba(90, 140, 90, 0.8);
-      margin-top: 0.3rem;
-      line-height: 1.4;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-    }
-
-    .sidebar-nav { position: relative; display: flex; flex-direction: column; gap: 0.3rem; }
-    .nav-link {
-      display: block;
-      padding: 0.6rem 0.9rem;
-      border-radius: 7px;
-      text-decoration: none;
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: rgba(140, 175, 140, 0.7);
-      border: 1px solid transparent;
-      transition: all 0.2s;
-      position: relative;
-      overflow: hidden;
-      letter-spacing: 0.02em;
-    }
-    .nav-link::before {
-      content: '';
-      position: absolute;
-      left: 0; top: 10%; bottom: 10%;
-      width: 2.5px;
-      background: linear-gradient(180deg, transparent, #f7c948, transparent);
-      border-radius: 0 2px 2px 0;
-      transform: scaleY(0);
-      transform-origin: center;
-      transition: transform 0.2s;
-    }
-    .nav-link:hover { color: #e2e8f0; background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.07); }
-    .nav-link:hover::before { transform: scaleY(0.5); }
-    .nav-link.active { color: #f7c948; background: rgba(247,201,72,0.07); border-color: rgba(247,201,72,0.18); }
-    .nav-link.active::before { transform: scaleY(1); }
-
-    .content { flex: 1; min-width: 0; padding: 1.5rem 2rem 3rem; overflow-y: auto; }
-    .content-inner { max-width: 720px; margin: 0 auto; }
-
-    /* ── Floating bonus numbers ──────────────────────────────────────── */
-    .bonus-layer {
-      position: fixed;
-      inset: 0;
-      z-index: 50;
-      pointer-events: none;
-      overflow: hidden;
-    }
-    .bonus-num {
-      position: absolute;
-      left: var(--x);
-      top: var(--y);
-      font-size: var(--sz);
-      opacity: var(--op);
-      font-family: 'Bebas Neue', 'Impact', sans-serif;
-      letter-spacing: 0.05em;
-      line-height: 1;
-      white-space: nowrap;
-      transform: rotate(var(--rot));
-      animation: bonus-drift var(--dur) ease-in-out var(--dl) infinite;
-    }
-    .bonus-num.pos { color: #f7c948; }
-    .bonus-num.neg { color: #f87171; }
-    .bonus-num.neutral { color: #86efac; }
-    @keyframes bonus-drift {
-      0%   { transform: rotate(var(--rot)) translateY(0px); }
-      28%  { transform: rotate(calc(var(--rot) + 4deg)) translateY(-14px); }
-      72%  { transform: rotate(calc(var(--rot) - 3deg)) translateY(9px); }
-      100% { transform: rotate(var(--rot)) translateY(0px); }
-    }
-
-    /* ── Glass card ──────────────────────────────────────────────────── */
-    .card {
-      background: rgba(10, 14, 22, 0.88);
-      border: 1px solid rgba(255,255,255,0.09);
-      border-radius: 12px;
-      padding: 1.5rem 1.75rem;
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-      margin-bottom: 1rem;
-    }
-
-    /* ── Typography ──────────────────────────────────────────────────── */
-    .section-label {
-      font-size: 0.68rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: #f7c948;
-      margin-bottom: 0.4rem;
-    }
-    .card h2 {
-      font-size: 1.15rem;
-      font-weight: 700;
-      color: #f1f5f9;
-      margin-bottom: 0.75rem;
-      line-height: 1.3;
-    }
-    .card p {
-      font-size: 0.875rem;
-      color: #94a3b8;
-      line-height: 1.7;
-      margin-bottom: 0.75rem;
-    }
-    .card p:last-child { margin-bottom: 0; }
-    .card p strong { color: #e2e8f0; }
-    .card p em { color: #f7c948; font-style: normal; font-weight: 600; }
-
-    .divider {
-      border: none;
-      border-top: 1px solid rgba(255,255,255,0.07);
-      margin: 1.25rem 0;
-    }
-
-    /* ── Highlight box ───────────────────────────────────────────────── */
-    .highlight {
-      background: rgba(247,201,72,0.06);
-      border: 1px solid rgba(247,201,72,0.18);
-      border-radius: 8px;
-      padding: 0.9rem 1.1rem;
-      margin: 0.75rem 0;
-      font-size: 0.875rem;
-      color: #cbd5e1;
-      line-height: 1.6;
-    }
-    .highlight strong { color: #f7c948; }
-
     /* ── Factorial table ─────────────────────────────────────────────── */
     .fact-table {
       width: 100%;
@@ -235,10 +26,8 @@
     .fact-table thead th {
       padding: 0.4rem 0.75rem;
       text-align: center;
-      font-size: 0.68rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
+      font-size: 0.68rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.06em;
       color: #64748b;
       border-bottom: 1px solid rgba(255,255,255,0.07);
     }
@@ -247,90 +36,41 @@
     .fact-table tbody tr:hover { background: rgba(255,255,255,0.03); }
     .fact-table tbody td { padding: 0.4rem 0.75rem; text-align: center; color: #94a3b8; }
     .fact-table tbody td:first-child { text-align: left; font-weight: 600; color: #e2e8f0; }
-    .fact-table .hl { color: #f7c948; font-weight: 700; }
+    .fact-table .hl   { color: #f7c948; font-weight: 700; }
     .fact-table .warn { color: #f87171; font-weight: 700; }
-    .fact-table .ok { color: #4ade80; font-weight: 700; }
+    .fact-table .ok   { color: #4ade80; font-weight: 700; }
 
     /* ── Berger visual ───────────────────────────────────────────────── */
-    .berger-wrap {
-      display: flex;
-      flex-direction: column;
-      gap: 0.4rem;
-      margin: 0.75rem 0;
-      font-size: 0.78rem;
-    }
-    .berger-row {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-    }
+    .berger-wrap { display: flex; flex-direction: column; gap: 0.4rem; margin: 0.75rem 0; font-size: 0.78rem; }
+    .berger-row  { display: flex; align-items: center; gap: 0.4rem; }
     .berger-label {
       width: 68px;
-      font-size: 0.7rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      color: #475569;
-      flex-shrink: 0;
+      font-size: 0.7rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.04em;
+      color: #475569; flex-shrink: 0;
     }
-    .berger-matches {
-      display: flex;
-      gap: 0.35rem;
-      flex-wrap: wrap;
-    }
+    .berger-matches { display: flex; gap: 0.35rem; flex-wrap: wrap; }
     .match-chip {
       padding: 0.2rem 0.55rem;
       border-radius: 5px;
       background: rgba(5,8,15,0.7);
       border: 1px solid rgba(255,255,255,0.08);
       color: #94a3b8;
-      font-size: 0.75rem;
-      white-space: nowrap;
+      font-size: 0.75rem; white-space: nowrap;
     }
     .match-chip .home { color: #f7c948; font-weight: 700; }
     .match-chip .away { color: #94a3b8; }
 
     /* ── HA bar chart ────────────────────────────────────────────────── */
-    .bar-chart {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-      margin: 0.75rem 0;
-    }
-    .bar-row {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      font-size: 0.8rem;
-    }
-    .bar-label {
-      width: 80px;
-      flex-shrink: 0;
-      color: #94a3b8;
-      font-size: 0.75rem;
-    }
-    .bar-track {
-      flex: 1;
-      height: 10px;
-      background: rgba(255,255,255,0.05);
-      border-radius: 5px;
-      overflow: hidden;
-    }
-    .bar-fill {
-      height: 100%;
-      border-radius: 5px;
-      transition: width 0.3s;
-    }
+    .bar-chart { display: flex; flex-direction: column; gap: 0.5rem; margin: 0.75rem 0; }
+    .bar-row   { display: flex; align-items: center; gap: 0.75rem; font-size: 0.8rem; }
+    .bar-label { width: 80px; flex-shrink: 0; color: #94a3b8; font-size: 0.75rem; }
+    .bar-track { flex: 1; height: 10px; background: rgba(255,255,255,0.05); border-radius: 5px; overflow: hidden; }
+    .bar-fill  { height: 100%; border-radius: 5px; transition: width 0.3s; }
     .bar-home .bar-fill { background: #f7c948; }
     .bar-away .bar-fill { background: #4ade80; }
     .bar-draw .bar-fill { background: #64748b; }
-    .bar-value {
-      width: 36px;
-      text-align: right;
-      font-weight: 600;
-      font-size: 0.78rem;
-      color: #e2e8f0;
-    }
+    .bar-value { width: 36px; text-align: right; font-weight: 600; font-size: 0.78rem; color: #e2e8f0; }
 
     /* ── Formula box ─────────────────────────────────────────────────── */
     .formula {
@@ -348,40 +88,22 @@
     .formula span { color: #94a3b8; font-size: 0.8rem; font-family: inherit; }
 
     /* ── Step list ───────────────────────────────────────────────────── */
-    .step-list {
-      display: flex;
-      flex-direction: column;
-      gap: 0.6rem;
-      margin: 0.75rem 0;
-    }
-    .step-item {
-      display: flex;
-      gap: 0.85rem;
-      align-items: flex-start;
-    }
+    .step-list { display: flex; flex-direction: column; gap: 0.6rem; margin: 0.75rem 0; }
+    .step-item { display: flex; gap: 0.85rem; align-items: flex-start; }
     .step-num {
-      width: 26px;
-      height: 26px;
+      width: 26px; height: 26px;
       border-radius: 50%;
       background: rgba(247,201,72,0.12);
       border: 1px solid rgba(247,201,72,0.3);
       color: #f7c948;
-      font-size: 0.75rem;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      margin-top: 1px;
+      font-size: 0.75rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; margin-top: 1px;
     }
-    .step-text {
-      font-size: 0.855rem;
-      color: #94a3b8;
-      line-height: 1.6;
-    }
+    .step-text { font-size: 0.855rem; color: #94a3b8; line-height: 1.6; }
     .step-text strong { color: #e2e8f0; }
 
-    /* ── Prob grid ───────────────────────────────────────────────────── */
+    /* ── Probability grid ────────────────────────────────────────────── */
     .prob-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -396,9 +118,9 @@
       text-align: center;
     }
     .prob-cell .prob-name { font-size: 0.75rem; color: #64748b; margin-bottom: 0.3rem; font-weight: 600; }
-    .prob-cell .prob-val { font-size: 1.3rem; font-weight: 700; color: #f7c948; }
-    .prob-cell .prob-sub { font-size: 0.68rem; color: #475569; margin-top: 0.1rem; }
-    .prob-cell.ok .prob-val { color: #4ade80; }
+    .prob-cell .prob-val  { font-size: 1.3rem; font-weight: 700; color: #f7c948; }
+    .prob-cell .prob-sub  { font-size: 0.68rem; color: #475569; margin-top: 0.1rem; }
+    .prob-cell.ok   .prob-val { color: #4ade80; }
     .prob-cell.warn .prob-val { color: #f87171; }
 
     /* ── Pill badge ──────────────────────────────────────────────────── */
@@ -406,12 +128,11 @@
       display: inline-block;
       padding: 0.15rem 0.55rem;
       border-radius: 20px;
-      font-size: 0.7rem;
-      font-weight: 700;
+      font-size: 0.7rem; font-weight: 700;
       vertical-align: middle;
       margin-left: 0.4rem;
     }
-    .badge-gold { background: rgba(247,201,72,0.15); color: #f7c948; border: 1px solid rgba(247,201,72,0.3); }
+    .badge-gold  { background: rgba(247,201,72,0.15); color: #f7c948; border: 1px solid rgba(247,201,72,0.3); }
     .badge-green { background: rgba(74,222,128,0.12); color: #4ade80; border: 1px solid rgba(74,222,128,0.25); }
   </style>
 </head>
@@ -473,77 +194,41 @@
   <rect width="1400" height="900" fill="url(#vig)"/>
 </svg>
 
-<!-- Floating fanta bonus numbers -->
-<div class="bonus-layer" aria-hidden="true">
-  <!-- Row 1: y 4-13% -->
-  <span class="bonus-num neutral" style="--x:5%;  --y:4%;  --sz:1.6rem; --op:0.09; --rot:-7deg;  --dur:20s; --dl:-3s">66</span>
-  <span class="bonus-num pos"     style="--x:18%; --y:7%;  --sz:1.2rem; --op:0.08; --rot:5deg;   --dur:23s; --dl:-8s">+3</span>
-  <span class="bonus-num neutral" style="--x:31%; --y:5%;  --sz:1.4rem; --op:0.08; --rot:-3deg;  --dur:19s; --dl:-1s">72</span>
-  <span class="bonus-num neg"     style="--x:45%; --y:9%;  --sz:1.1rem; --op:0.09; --rot:9deg;   --dur:22s; --dl:-6s">-1</span>
-  <span class="bonus-num neutral" style="--x:58%; --y:5%;  --sz:1.5rem; --op:0.08; --rot:-6deg;  --dur:18s; --dl:-4s">71.5</span>
-  <span class="bonus-num pos"     style="--x:72%; --y:8%;  --sz:1.0rem; --op:0.08; --rot:4deg;   --dur:25s; --dl:-9s">+1.5</span>
-  <span class="bonus-num neutral" style="--x:85%; --y:6%;  --sz:1.3rem; --op:0.09; --rot:-8deg;  --dur:21s; --dl:-2s">78</span>
-  <!-- Row 2: y 17-26% -->
-  <span class="bonus-num neg"     style="--x:9%;  --y:19%; --sz:1.2rem; --op:0.08; --rot:6deg;   --dur:24s; --dl:-7s">-0.5</span>
-  <span class="bonus-num neutral" style="--x:24%; --y:22%; --sz:1.5rem; --op:0.09; --rot:-4deg;  --dur:20s; --dl:-3s">77.5</span>
-  <span class="bonus-num pos"     style="--x:38%; --y:17%; --sz:1.3rem; --op:0.08; --rot:11deg;  --dur:17s; --dl:-5s">+0.5</span>
-  <span class="bonus-num neutral" style="--x:52%; --y:24%; --sz:1.6rem; --op:0.09; --rot:-9deg;  --dur:22s; --dl:-1s">68</span>
-  <span class="bonus-num pos"     style="--x:66%; --y:19%; --sz:1.1rem; --op:0.08; --rot:3deg;   --dur:19s; --dl:-8s">+2</span>
-  <span class="bonus-num neutral" style="--x:79%; --y:23%; --sz:1.4rem; --op:0.09; --rot:-7deg;  --dur:23s; --dl:-4s">65.5</span>
-  <span class="bonus-num neg"     style="--x:93%; --y:17%; --sz:1.0rem; --op:0.08; --rot:8deg;   --dur:21s; --dl:-6s">-2</span>
-  <!-- Row 3: y 31-41% -->
-  <span class="bonus-num neutral" style="--x:3%;  --y:33%; --sz:1.4rem; --op:0.09; --rot:-5deg;  --dur:18s; --dl:-2s">75</span>
-  <span class="bonus-num pos"     style="--x:16%; --y:38%; --sz:1.2rem; --op:0.08; --rot:7deg;   --dur:25s; --dl:-9s">+3.5</span>
-  <span class="bonus-num neutral" style="--x:30%; --y:33%; --sz:1.5rem; --op:0.08; --rot:-3deg;  --dur:20s; --dl:-4s">62</span>
-  <span class="bonus-num neg"     style="--x:44%; --y:40%; --sz:1.1rem; --op:0.09; --rot:10deg;  --dur:23s; --dl:-7s">-1.5</span>
-  <span class="bonus-num neutral" style="--x:57%; --y:31%; --sz:1.6rem; --op:0.08; --rot:-8deg;  --dur:19s; --dl:-1s">80</span>
-  <span class="bonus-num pos"     style="--x:71%; --y:37%; --sz:1.0rem; --op:0.09; --rot:5deg;   --dur:22s; --dl:-5s">+1</span>
-  <span class="bonus-num neutral" style="--x:87%; --y:34%; --sz:1.3rem; --op:0.08; --rot:-6deg;  --dur:17s; --dl:-3s">59</span>
-  <!-- Row 4: y 45-55% -->
-  <span class="bonus-num pos"     style="--x:7%;  --y:47%; --sz:1.5rem; --op:0.09; --rot:4deg;   --dur:21s; --dl:-8s">+4</span>
-  <span class="bonus-num neutral" style="--x:21%; --y:51%; --sz:1.3rem; --op:0.08; --rot:-7deg;  --dur:24s; --dl:-2s">69</span>
-  <span class="bonus-num neg"     style="--x:35%; --y:46%; --sz:1.2rem; --op:0.09; --rot:9deg;   --dur:20s; --dl:-6s">-3</span>
-  <span class="bonus-num neutral" style="--x:49%; --y:53%; --sz:1.6rem; --op:0.08; --rot:-4deg;  --dur:18s; --dl:-9s">73</span>
-  <span class="bonus-num pos"     style="--x:63%; --y:47%; --sz:1.1rem; --op:0.09; --rot:6deg;   --dur:23s; --dl:-4s">+2.5</span>
-  <span class="bonus-num neutral" style="--x:77%; --y:54%; --sz:1.4rem; --op:0.08; --rot:-11deg; --dur:19s; --dl:-1s">58</span>
-  <span class="bonus-num pos"     style="--x:92%; --y:48%; --sz:1.2rem; --op:0.09; --rot:3deg;   --dur:25s; --dl:-7s">+4.5</span>
-  <!-- Row 5: y 59-68% -->
-  <span class="bonus-num neutral" style="--x:4%;  --y:62%; --sz:1.4rem; --op:0.08; --rot:-9deg;  --dur:22s; --dl:-5s">76</span>
-  <span class="bonus-num neg"     style="--x:19%; --y:66%; --sz:1.1rem; --op:0.09; --rot:7deg;   --dur:20s; --dl:-3s">-0.5</span>
-  <span class="bonus-num neutral" style="--x:33%; --y:60%; --sz:1.5rem; --op:0.08; --rot:-3deg;  --dur:17s; --dl:-8s">64</span>
-  <span class="bonus-num pos"     style="--x:47%; --y:67%; --sz:1.2rem; --op:0.09; --rot:8deg;   --dur:24s; --dl:-2s">+1</span>
-  <span class="bonus-num neutral" style="--x:60%; --y:62%; --sz:1.6rem; --op:0.08; --rot:-6deg;  --dur:21s; --dl:-6s">65.6</span>
-  <span class="bonus-num neg"     style="--x:74%; --y:67%; --sz:1.0rem; --op:0.09; --rot:4deg;   --dur:19s; --dl:-9s">-1</span>
-  <span class="bonus-num neutral" style="--x:88%; --y:60%; --sz:1.3rem; --op:0.08; --rot:-8deg;  --dur:23s; --dl:-4s">67</span>
-  <!-- Row 6: y 73-82% -->
-  <span class="bonus-num pos"     style="--x:8%;  --y:75%; --sz:1.3rem; --op:0.09; --rot:5deg;   --dur:20s; --dl:-7s">+3</span>
-  <span class="bonus-num neutral" style="--x:23%; --y:79%; --sz:1.5rem; --op:0.08; --rot:-4deg;  --dur:22s; --dl:-1s">70</span>
-  <span class="bonus-num neg"     style="--x:37%; --y:74%; --sz:1.2rem; --op:0.09; --rot:10deg;  --dur:18s; --dl:-5s">-2</span>
-  <span class="bonus-num neutral" style="--x:51%; --y:81%; --sz:1.4rem; --op:0.08; --rot:-7deg;  --dur:25s; --dl:-3s">74</span>
-  <span class="bonus-num pos"     style="--x:65%; --y:76%; --sz:1.1rem; --op:0.09; --rot:3deg;   --dur:21s; --dl:-8s">+0.5</span>
-  <span class="bonus-num neutral" style="--x:80%; --y:80%; --sz:1.6rem; --op:0.08; --rot:-9deg;  --dur:19s; --dl:-6s">63</span>
-  <span class="bonus-num pos"     style="--x:94%; --y:73%; --sz:1.2rem; --op:0.09; --rot:6deg;   --dur:23s; --dl:-2s">+1.5</span>
-  <!-- Row 7: y 87-96% -->
-  <span class="bonus-num neutral" style="--x:12%; --y:88%; --sz:1.4rem; --op:0.08; --rot:-5deg;  --dur:24s; --dl:-4s">55</span>
-  <span class="bonus-num neg"     style="--x:27%; --y:93%; --sz:1.1rem; --op:0.09; --rot:8deg;   --dur:17s; --dl:-9s">-0.5</span>
-  <span class="bonus-num neutral" style="--x:42%; --y:88%; --sz:1.5rem; --op:0.08; --rot:-3deg;  --dur:20s; --dl:-1s">79</span>
-  <span class="bonus-num pos"     style="--x:56%; --y:94%; --sz:1.3rem; --op:0.09; --rot:7deg;   --dur:22s; --dl:-7s">+2</span>
-  <span class="bonus-num neutral" style="--x:70%; --y:89%; --sz:1.6rem; --op:0.08; --rot:-10deg; --dur:19s; --dl:-5s">71</span>
-  <span class="bonus-num neg"     style="--x:84%; --y:93%; --sz:1.2rem; --op:0.09; --rot:4deg;   --dur:25s; --dl:-3s">-1</span>
-  <span class="bonus-num neutral" style="--x:96%; --y:87%; --sz:1.4rem; --op:0.08; --rot:-6deg;  --dur:21s; --dl:-8s">77</span>
+<!-- Floating bonus numbers (filled by shared.js) -->
+<div class="bonus-layer" aria-hidden="true"></div>
+
+<!-- Mobile top bar -->
+<div class="mobile-topbar">
+  <a href="index.html" class="mobile-topbar-brand">
+    <span class="mobile-topbar-logo">⚽</span>
+    <span class="mobile-topbar-title">FantaGiustiziere</span>
+  </a>
+  <button class="burger-btn" id="burgerBtn" aria-label="Menu" aria-expanded="false">☰</button>
+</div>
+<div class="mobile-menu" id="mobileMenu" hidden>
+  <a href="index.html"   class="nav-link">⚡ Analisi</a>
+  <a href="info.html"    class="nav-link active">📐 Come funziona</a>
+  <a href="about.html"   class="nav-link">🧩 Il Progetto</a>
+  <a href="support.html" class="nav-link">❤️ Supporta</a>
 </div>
 
 <div class="layout">
   <aside class="sidebar">
     <div class="sidebar-brand">
-      <div class="sidebar-logo">⚽</div>
+      <span class="sidebar-logo">⚽</span>
       <div class="sidebar-title">FantaGiustiziere</div>
       <div class="sidebar-subtitle">Ottimizzatore del calendario del Fantacalcio</div>
     </div>
     <nav class="sidebar-nav">
-      <a href="index.html" class="nav-link">⚡ Analisi</a>
-      <a href="info.html" class="nav-link active">📐 Come funziona</a>
+      <a href="index.html"   class="nav-link">⚡ Analisi</a>
+      <a href="info.html"    class="nav-link active">📐 Come funziona</a>
+      <a href="about.html"   class="nav-link">🧩 Il Progetto</a>
+      <a href="support.html" class="nav-link">❤️ Supporta</a>
     </nav>
+    <div class="sidebar-footer">
+      FantaGiustiziere &copy; 2024<br>
+      <a href="about.html">Il Progetto</a> · <a href="support.html">Supporta</a>
+    </div>
   </aside>
 
   <main class="content">
@@ -597,42 +282,12 @@
         </tr>
       </thead>
       <tbody>
-        <tr>
-          <td>4</td>
-          <td>4!</td>
-          <td class="ok">24</td>
-          <td class="ok">istantaneo</td>
-        </tr>
-        <tr>
-          <td>6</td>
-          <td>6!</td>
-          <td class="ok">720</td>
-          <td class="ok">istantaneo</td>
-        </tr>
-        <tr>
-          <td>8</td>
-          <td>8!</td>
-          <td class="ok">40.320</td>
-          <td class="ok">millisecondi</td>
-        </tr>
-        <tr>
-          <td>10</td>
-          <td>10!</td>
-          <td class="hl">3.628.800</td>
-          <td class="hl">secondi</td>
-        </tr>
-        <tr>
-          <td>12</td>
-          <td>12!</td>
-          <td class="warn">479.001.600</td>
-          <td class="warn">ore (con limite)</td>
-        </tr>
-        <tr>
-          <td>14</td>
-          <td>14!</td>
-          <td class="warn">87.178.291.200</td>
-          <td class="warn">impraticabile</td>
-        </tr>
+        <tr><td>4</td><td>4!</td><td class="ok">24</td><td class="ok">istantaneo</td></tr>
+        <tr><td>6</td><td>6!</td><td class="ok">720</td><td class="ok">istantaneo</td></tr>
+        <tr><td>8</td><td>8!</td><td class="ok">40.320</td><td class="ok">millisecondi</td></tr>
+        <tr><td>10</td><td>10!</td><td class="hl">3.628.800</td><td class="hl">secondi</td></tr>
+        <tr><td>12</td><td>12!</td><td class="warn">479.001.600</td><td class="warn">ore (con limite)</td></tr>
+        <tr><td>14</td><td>14!</td><td class="warn">87.178.291.200</td><td class="warn">impraticabile</td></tr>
       </tbody>
     </table>
 
@@ -862,5 +517,7 @@
   </div><!-- /.content-inner -->
   </main>
 </div><!-- /.layout -->
+
+<script src="shared.js"></script>
 </body>
 </html>

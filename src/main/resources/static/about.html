@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <title>FantaGiustiziere — Il Progetto</title>
+  <meta name="description" content="FantaGiustiziere è un progetto open source per analizzare il calendario del Fantacalcio. Scopri la storia, la tecnologia e come contribuire.">
+  <meta property="og:type"        content="website">
+  <meta property="og:site_name"   content="FantaGiustiziere">
+  <meta property="og:locale"      content="it_IT">
+  <meta property="og:url"         content="https://PRODUCTION_URL/about.html">
+  <meta property="og:title"       content="FantaGiustiziere — Il Progetto">
+  <meta property="og:description" content="FantaGiustiziere è un progetto open source per analizzare il calendario del Fantacalcio. Scopri la storia, la tecnologia e come contribuire.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap">
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    /* ── Tech stack grid ──────────────────────────────────────────────── */
+    .tech-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 0.6rem;
+      margin: 0.75rem 0;
+    }
+    .tech-chip {
+      background: rgba(5,8,15,0.7);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      padding: 0.65rem 0.9rem;
+      text-align: center;
+    }
+    .tech-chip .tech-icon { font-size: 1.4rem; display: block; margin-bottom: 0.25rem; }
+    .tech-chip .tech-name { font-size: 0.78rem; font-weight: 600; color: #e2e8f0; display: block; }
+    .tech-chip .tech-role { font-size: 0.68rem; color: #475569; display: block; margin-top: 0.1rem; }
+
+    /* ── Step list ───────────────────────────────────────────────────── */
+    .step-list { display: flex; flex-direction: column; gap: 0.6rem; margin: 0.75rem 0; }
+    .step-item { display: flex; gap: 0.85rem; align-items: flex-start; }
+    .step-num {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: rgba(247,201,72,0.12);
+      border: 1px solid rgba(247,201,72,0.3);
+      color: #f7c948;
+      font-size: 0.75rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; margin-top: 1px;
+    }
+    .step-text { font-size: 0.855rem; color: #94a3b8; line-height: 1.6; }
+    .step-text strong { color: #e2e8f0; }
+
+    /* ── CTA card ────────────────────────────────────────────────────── */
+    .cta-card {
+      text-align: center;
+      padding: 2rem 1.5rem;
+    }
+    .cta-emoji { font-size: 2.5rem; display: block; margin-bottom: 0.75rem; }
+    .cta-card h2 { font-size: 1.1rem; font-weight: 700; color: #f1f5f9; margin-bottom: 0.5rem; }
+    .cta-card p { font-size: 0.875rem; color: #94a3b8; margin-bottom: 1.25rem; line-height: 1.6; }
+  </style>
+</head>
+<body>
+
+<!-- Football pitch SVG background -->
+<svg class="field-bg" viewBox="0 0 1400 900" preserveAspectRatio="xMidYMid slice"
+     xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <defs>
+    <pattern id="mow" x="0" y="0" width="140" height="900" patternUnits="userSpaceOnUse">
+      <rect x="0" y="0" width="140" height="900" fill="#0e4716"/>
+      <rect x="0" y="0" width="70"  height="900" fill="#0b3c12"/>
+    </pattern>
+    <radialGradient id="fl1" cx="210" cy="0" r="1050" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="rgba(210,255,190,0.22)"/>
+      <stop offset="55%"  stop-color="rgba(160,220,140,0.06)"/>
+      <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+    </radialGradient>
+    <radialGradient id="fl2" cx="1190" cy="0" r="1050" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="rgba(210,255,190,0.22)"/>
+      <stop offset="55%"  stop-color="rgba(160,220,140,0.06)"/>
+      <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+    </radialGradient>
+    <radialGradient id="cg" cx="700" cy="450" r="320" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="rgba(255,255,220,0.10)"/>
+      <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+    </radialGradient>
+    <radialGradient id="vig" cx="700" cy="450" r="740" gradientUnits="userSpaceOnUse">
+      <stop offset="38%"  stop-color="rgba(0,0,0,0)"/>
+      <stop offset="100%" stop-color="rgba(0,0,0,0.76)"/>
+    </radialGradient>
+  </defs>
+  <rect width="1400" height="900" fill="url(#mow)"/>
+  <g fill="none" stroke="rgba(255,255,255,0.40)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="60" y="60" width="1280" height="780"/>
+    <line x1="700" y1="60" x2="700" y2="840"/>
+    <circle cx="700" cy="450" r="110"/>
+    <rect x="60"   y="219" width="200" height="462"/>
+    <rect x="60"   y="345" width="67"  height="210"/>
+    <rect x="1140" y="219" width="200" height="462"/>
+    <rect x="1273" y="345" width="67"  height="210"/>
+    <path d="M 260 362 A 110 110 0 0 1 260 538"/>
+    <path d="M 1140 538 A 110 110 0 0 1 1140 362"/>
+    <path d="M 80 60   A 20 20 0 0 1 60 80"/>
+    <path d="M 1320 60 A 20 20 0 0 0 1340 80"/>
+    <path d="M 60 820  A 20 20 0 0 1 80 840"/>
+    <path d="M 1320 840 A 20 20 0 0 1 1340 820"/>
+    <rect x="16"   y="388" width="44" height="124" stroke="rgba(255,255,255,0.22)"/>
+    <rect x="1340" y="388" width="44" height="124" stroke="rgba(255,255,255,0.22)"/>
+  </g>
+  <g fill="rgba(255,255,255,0.40)">
+    <circle cx="700"  cy="450" r="5"/>
+    <circle cx="194"  cy="450" r="5"/>
+    <circle cx="1206" cy="450" r="5"/>
+  </g>
+  <rect width="1400" height="900" fill="url(#fl1)"/>
+  <rect width="1400" height="900" fill="url(#fl2)"/>
+  <rect width="1400" height="900" fill="url(#cg)"/>
+  <rect width="1400" height="900" fill="url(#vig)"/>
+</svg>
+
+<!-- Floating bonus numbers (filled by shared.js) -->
+<div class="bonus-layer" aria-hidden="true"></div>
+
+<!-- Mobile top bar -->
+<div class="mobile-topbar">
+  <a href="index.html" class="mobile-topbar-brand">
+    <span class="mobile-topbar-logo">⚽</span>
+    <span class="mobile-topbar-title">FantaGiustiziere</span>
+  </a>
+  <button class="burger-btn" id="burgerBtn" aria-label="Menu" aria-expanded="false">☰</button>
+</div>
+<div class="mobile-menu" id="mobileMenu" hidden>
+  <a href="index.html"   class="nav-link">⚡ Analisi</a>
+  <a href="info.html"    class="nav-link">📐 Come funziona</a>
+  <a href="about.html"   class="nav-link active">🧩 Il Progetto</a>
+  <a href="support.html" class="nav-link">❤️ Supporta</a>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <span class="sidebar-logo">⚽</span>
+      <div class="sidebar-title">FantaGiustiziere</div>
+      <div class="sidebar-subtitle">Ottimizzatore del calendario del Fantacalcio</div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="index.html"   class="nav-link">⚡ Analisi</a>
+      <a href="info.html"    class="nav-link">📐 Come funziona</a>
+      <a href="about.html"   class="nav-link active">🧩 Il Progetto</a>
+      <a href="support.html" class="nav-link">❤️ Supporta</a>
+    </nav>
+    <div class="sidebar-footer">
+      FantaGiustiziere &copy; 2024<br>
+      <a href="support.html">Supporta il progetto</a>
+    </div>
+  </aside>
+
+  <main class="content">
+  <div class="content-inner">
+
+  <!-- ── Intro ─────────────────────────────────────────────────────── -->
+  <div class="card">
+    <div class="section-label">La storia</div>
+    <h2>Perché esiste FantaGiustiziere?</h2>
+    <p>
+      Tutto è cominciato con una discussione che si ripete ogni fine stagione in qualsiasi lega
+      fantacalcistica: <em>"Hai vinto perché sei il più forte, o perché il calendario ti ha favorito?"</em>
+      La risposta intuitiva spesso non regge all'analisi — c'è chi finisce primo con punteggi mediocri
+      e chi produce fantasticamente ma chiude quinto.
+    </p>
+    <p>
+      FantaGiustiziere nasce per <strong>dare una risposta numerica a quella domanda</strong>.
+      Invece di affidarsi all'impressione, prende i punteggi reali della stagione e ricalcola
+      sistematicamente la classifica per ogni calendario alternativo possibile — fino a centinaia
+      di migliaia di scenari diversi.
+    </p>
+    <p>
+      Il risultato non è una previsione né un giudizio: è uno <strong>specchio statistico</strong>
+      che mostra, nero su bianco, quanto il sorteggio abbia pesato sul risultato finale.
+    </p>
+  </div>
+
+  <!-- ── How it works (quick) ──────────────────────────────────────── -->
+  <div class="card">
+    <div class="section-label">Come funziona — in breve</div>
+    <h2>Quattro passi per scoprire la verità sul tuo calendario</h2>
+
+    <div class="step-list">
+      <div class="step-item">
+        <div class="step-num">1</div>
+        <div class="step-text">
+          <strong>Carica il file Excel</strong> della tua lega — quello esportato dalla piattaforma
+          con i punteggi di ogni giornata per ogni giocatore.
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">2</div>
+        <div class="step-text">
+          <strong>Configura i parametri</strong>: vantaggio casalingo, soglia e intervallo per il calcolo
+          dei gol. L'app mostra subito la classifica attuale.
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">3</div>
+        <div class="step-text">
+          <strong>Scegli la profondità</strong> di analisi: da mille permutazioni rapide fino al
+          calcolo completo di tutti i calendari possibili.
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">4</div>
+        <div class="step-text">
+          <strong>Leggi i risultati</strong>: quante volte ogni giocatore avrebbe vinto con un
+          calendario diverso, con uno slider per simulare diversi valori di vantaggio casalingo.
+        </div>
+      </div>
+    </div>
+
+    <div class="highlight">
+      Vuoi capire la matematica dietro? La pagina
+      <strong><a href="info.html" style="color:#f7c948;text-decoration:none">📐 Come funziona</a></strong>
+      spiega l'algoritmo di Heap, l'algoritmo di Berger e la combinatoria del fattoriale.
+    </div>
+  </div>
+
+  <!-- ── Tech stack ─────────────────────────────────────────────────── -->
+  <div class="card">
+    <div class="section-label">Stack tecnologico</div>
+    <h2>Costruito con strumenti solidi e gratuiti</h2>
+    <p>
+      FantaGiustiziere è un progetto personale sviluppato interamente con tecnologie open source.
+      Il backend gira su <em>Java 21</em> con <em>Spring Boot</em>; il frontend è HTML, CSS e
+      JavaScript vanilla — nessun framework, nessuna dipendenza inutile.
+    </p>
+
+    <div class="tech-grid">
+      <div class="tech-chip">
+        <span class="tech-icon">☕</span>
+        <span class="tech-name">Java 21</span>
+        <span class="tech-role">Backend / algoritmi</span>
+      </div>
+      <div class="tech-chip">
+        <span class="tech-icon">🌱</span>
+        <span class="tech-name">Spring Boot 3</span>
+        <span class="tech-role">REST API / server</span>
+      </div>
+      <div class="tech-chip">
+        <span class="tech-icon">📊</span>
+        <span class="tech-name">Apache POI</span>
+        <span class="tech-role">Parsing Excel</span>
+      </div>
+      <div class="tech-chip">
+        <span class="tech-icon">🌐</span>
+        <span class="tech-name">Vanilla JS</span>
+        <span class="tech-role">Frontend / UI</span>
+      </div>
+      <div class="tech-chip">
+        <span class="tech-icon">🎨</span>
+        <span class="tech-name">CSS3</span>
+        <span class="tech-role">Stile / animazioni</span>
+      </div>
+      <div class="tech-chip">
+        <span class="tech-icon">🚀</span>
+        <span class="tech-name">Async API</span>
+        <span class="tech-role">Calcolo non bloccante</span>
+      </div>
+    </div>
+
+    <p>
+      Il calcolo delle permutazioni usa <strong>l'algoritmo di Heap</strong> per generare tutti gli
+      ordinamenti senza ripetizioni, con supporto multi-thread per sfruttare i core disponibili.
+      I job di calcolo girano in modo asincrono: il browser aggiorna il contatore in tempo reale
+      tramite polling, senza bloccare l'interfaccia.
+    </p>
+  </div>
+
+  <!-- ── CTA ────────────────────────────────────────────────────────── -->
+  <div class="card cta-card">
+    <span class="cta-emoji">⚡</span>
+    <h2>Pronto a scoprire la verità sul tuo calendario?</h2>
+    <p>Carica il file Excel della tua lega e scopri chi è stato davvero favorito dal sorteggio.</p>
+    <a href="index.html" class="btn btn-primary" style="display:inline-block;padding:0.8rem 2rem;text-decoration:none;">
+      Inizia l'analisi →
+    </a>
+  </div>
+
+  </div><!-- /.content-inner -->
+  </main>
+</div><!-- /.layout -->
+
+<script src="shared.js"></script>
+</body>
+</html>

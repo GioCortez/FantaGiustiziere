@@ -3,175 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <title>FantaGiustiziere</title>
+  <meta name="description" content="Scopri se il calendario del tuo Fantacalcio era davvero contro di te. Analisi statistica gratuita su tutte le possibili combinazioni di calendari.">
+  <meta property="og:type"        content="website">
+  <meta property="og:site_name"   content="FantaGiustiziere">
+  <meta property="og:locale"      content="it_IT">
+  <meta property="og:url"         content="https://PRODUCTION_URL/">
+  <meta property="og:title"       content="FantaGiustiziere — Analisi del calendario">
+  <meta property="og:description" content="Scopri se il calendario del tuo Fantacalcio era davvero contro di te. Analisi statistica gratuita su tutte le possibili combinazioni di calendari.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap">
+  <link rel="stylesheet" href="shared.css">
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    [hidden] { display: none !important; }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      color: #e2e8f0;
-      min-height: 100vh;
-    }
-
-    /* ── Football pitch background ───────────────────────────────────── */
-    .field-bg {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      z-index: -1;
-    }
-
-    /* ── Sidebar layout ──────────────────────────────────────────────── */
-    .layout { display: flex; min-height: 100vh; }
-
-    .sidebar {
-      width: 260px;
-      flex-shrink: 0;
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      background: linear-gradient(160deg,
-        rgba(3, 10, 5, 0.97) 0%,
-        rgba(5, 14, 8, 0.96) 45%,
-        rgba(7, 12, 18, 0.97) 100%
-      );
-      border-right: 1px solid rgba(247,201,72,0.18);
-      box-shadow: 2px 0 32px rgba(0,0,0,0.75), inset -1px 0 0 rgba(247,201,72,0.08);
-      backdrop-filter: blur(28px);
-      -webkit-backdrop-filter: blur(28px);
-      padding: 2rem 1rem 1.5rem;
-      display: flex;
-      flex-direction: column;
-      z-index: 200;
-      overflow: hidden;
-    }
-    .sidebar::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: repeating-linear-gradient(
-        -55deg,
-        transparent,
-        transparent 14px,
-        rgba(255,255,255,0.012) 14px,
-        rgba(255,255,255,0.012) 16px
-      );
-      pointer-events: none;
-    }
-    .sidebar::after {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 3px;
-      background: linear-gradient(90deg, transparent 5%, rgba(247,201,72,0.75) 50%, transparent 95%);
-    }
-
-    .sidebar-brand {
-      position: relative;
-      text-align: center;
-      padding-bottom: 1.35rem;
-      border-bottom: 1px solid rgba(247,201,72,0.1);
-      margin-bottom: 1.35rem;
-    }
-    .sidebar-logo {
-      font-size: 2.8rem;
-      line-height: 1;
-      margin-bottom: 0.5rem;
-      display: block;
-      filter: drop-shadow(0 0 14px rgba(247,201,72,0.5)) drop-shadow(0 3px 10px rgba(0,0,0,0.7));
-      animation: ball-pulse 3.5s ease-in-out infinite;
-    }
-    @keyframes ball-pulse {
-      0%, 100% { filter: drop-shadow(0 0 10px rgba(247,201,72,0.4)) drop-shadow(0 3px 8px rgba(0,0,0,0.7)); transform: scale(1); }
-      50%       { filter: drop-shadow(0 0 22px rgba(247,201,72,0.65)) drop-shadow(0 4px 14px rgba(0,0,0,0.7)); transform: scale(1.07); }
-    }
-    .sidebar-title {
-      font-family: 'Bebas Neue', 'Impact', sans-serif;
-      font-size: 1.2rem;
-      font-weight: 400;
-      letter-spacing: 0.12em;
-      color: #f7c948;
-      text-shadow: 0 0 24px rgba(247,201,72,0.45), 0 1px 10px rgba(0,0,0,0.9);
-    }
-    .sidebar-subtitle {
-      font-size: 0.6rem;
-      color: rgba(90, 140, 90, 0.8);
-      margin-top: 0.3rem;
-      line-height: 1.4;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-    }
-
-    .sidebar-nav { position: relative; display: flex; flex-direction: column; gap: 0.3rem; }
-    .nav-link {
-      display: block;
-      padding: 0.6rem 0.9rem;
-      border-radius: 7px;
-      text-decoration: none;
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: rgba(140, 175, 140, 0.7);
-      border: 1px solid transparent;
-      transition: all 0.2s;
-      position: relative;
-      overflow: hidden;
-      letter-spacing: 0.02em;
-    }
-    .nav-link::before {
-      content: '';
-      position: absolute;
-      left: 0; top: 10%; bottom: 10%;
-      width: 2.5px;
-      background: linear-gradient(180deg, transparent, #f7c948, transparent);
-      border-radius: 0 2px 2px 0;
-      transform: scaleY(0);
-      transform-origin: center;
-      transition: transform 0.2s;
-    }
-    .nav-link:hover { color: #e2e8f0; background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.07); }
-    .nav-link:hover::before { transform: scaleY(0.5); }
-    .nav-link.active { color: #f7c948; background: rgba(247,201,72,0.07); border-color: rgba(247,201,72,0.18); }
-    .nav-link.active::before { transform: scaleY(1); }
-
-    .content { flex: 1; min-width: 0; padding: 1.5rem 2rem 3rem; overflow-y: auto; }
+    /* ── Content layout override ─────────────────────────────────────── */
     .content-inner { max-width: 100%; }
-    /* Constrain wizard steps and step bar to readable width; step 5 expands freely */
     .content-inner > * { max-width: 720px; margin-left: auto; margin-right: auto; }
     #step5 { max-width: 100%; }
-
-    /* ── Floating bonus numbers ──────────────────────────────────────── */
-    .bonus-layer {
-      position: fixed;
-      inset: 0;
-      z-index: 50;
-      pointer-events: none;
-      overflow: hidden;
-    }
-    .bonus-num {
-      position: absolute;
-      left: var(--x);
-      top: var(--y);
-      font-size: var(--sz);
-      opacity: var(--op);
-      font-family: 'Bebas Neue', 'Impact', sans-serif;
-      letter-spacing: 0.05em;
-      line-height: 1;
-      white-space: nowrap;
-      transform: rotate(var(--rot));
-      animation: bonus-drift var(--dur) ease-in-out var(--dl) infinite;
-    }
-    .bonus-num.pos { color: #f7c948; }
-    .bonus-num.neg { color: #f87171; }
-    .bonus-num.neutral { color: #86efac; }
-    @keyframes bonus-drift {
-      0%   { transform: rotate(var(--rot)) translateY(0px); }
-      28%  { transform: rotate(calc(var(--rot) + 4deg)) translateY(-14px); }
-      72%  { transform: rotate(calc(var(--rot) - 3deg)) translateY(9px); }
-      100% { transform: rotate(var(--rot)) translateY(0px); }
-    }
 
     /* ── Step indicator ──────────────────────────────────────────────── */
     .steps-bar {
@@ -218,60 +66,18 @@
       max-width: 60px;
       transition: background 0.25s;
     }
-
-    .step-node.active .step-circle {
-      background: #f7c948;
-      border-color: #f7c948;
-      color: #0a0e16;
-    }
+    .step-node.active .step-circle { background: #f7c948; border-color: #f7c948; color: #0a0e16; }
     .step-node.active .step-label { color: #f7c948; }
-
-    .step-node.done .step-circle {
-      background: #166534;
-      border-color: #16a34a;
-      color: #86efac;
-    }
+    .step-node.done .step-circle { background: #166534; border-color: #16a34a; color: #86efac; }
     .step-node.done .step-label { color: #4ade80; }
     .step-connector.done { background: #166534; }
 
-    /* ── Glass card ──────────────────────────────────────────────────── */
-    .card {
-      background: rgba(10, 14, 22, 0.88);
-      border: 1px solid rgba(255,255,255,0.09);
-      border-radius: 12px;
-      padding: 1.25rem 1.5rem;
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-      position: relative;
-    }
     /* Results card sits above the floating bonus layer (z-index 50) */
-    #step5 .card {
-      background: rgba(7, 9, 16, 0.97);
-      z-index: 60;
-    }
-
-    .card-title {
-      font-size: 1rem;
-      font-weight: 700;
-      color: #f1f5f9;
-      margin-bottom: 0.2rem;
-    }
-    .card-subtitle {
-      font-size: 0.8rem;
-      color: #64748b;
-      margin-bottom: 1rem;
-    }
+    #step5 .card { background: rgba(7, 9, 16, 0.97); z-index: 60; }
 
     /* ── Form fields ─────────────────────────────────────────────────── */
     .field { margin-bottom: 1.25rem; }
-    .field label {
-      display: block;
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: #cbd5e1;
-      margin-bottom: 0.4rem;
-    }
+    .field label { display: block; font-size: 0.875rem; font-weight: 500; color: #cbd5e1; margin-bottom: 0.4rem; }
     .field small { color: #475569; font-size: 0.78rem; }
 
     input[type="file"] {
@@ -299,13 +105,8 @@
     }
     input[type="number"]:focus { outline: none; border-color: #f7c948; }
 
-    .coverage-info {
-      margin-bottom: 0.6rem;
-      font-size: 0.8rem;
-      color: #64748b;
-      line-height: 1.5;
-    }
-
+    /* ── Coverage selector ───────────────────────────────────────────── */
+    .coverage-info { margin-bottom: 0.6rem; font-size: 0.8rem; color: #64748b; line-height: 1.5; }
     .coverage-grid { display: flex; flex-direction: column; gap: 0.4rem; }
     .coverage-row {
       display: grid;
@@ -326,61 +127,7 @@
     .coverage-hint  { font-size: 0.78rem; color: #64748b; white-space: nowrap; text-align: right; }
     .coverage-hint.slow { color: #f59e0b; }
 
-    .radio-group { display: flex; gap: 1rem; }
-    .radio-option {
-      flex: 1;
-      display: flex; align-items: center; gap: 0.6rem;
-      padding: 0.75rem 1rem;
-      background: rgba(5,8,15,0.75);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 8px;
-      cursor: pointer;
-      transition: border-color 0.15s, background 0.15s;
-    }
-    .radio-option:has(input:checked) {
-      border-color: #f7c948;
-      background: rgba(30,25,5,0.85);
-    }
-    .radio-option input[type="radio"] { accent-color: #f7c948; }
-    .radio-option .radio-label { font-size: 0.9rem; font-weight: 500; }
-    .radio-option .radio-desc { font-size: 0.75rem; color: #64748b; }
-
-    .section-divider {
-      border: none;
-      border-top: 1px solid rgba(255,255,255,0.07);
-      margin: 1.5rem 0;
-    }
-
-    /* ── Buttons ─────────────────────────────────────────────────────── */
-    .btn-row {
-      display: flex;
-      gap: 0.75rem;
-      margin-top: 1rem;
-    }
-    .btn {
-      padding: 0.75rem 1.5rem;
-      border-radius: 8px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      border: none;
-      cursor: pointer;
-      transition: background 0.15s, opacity 0.15s;
-    }
-    .btn-primary {
-      flex: 1;
-      background: #f7c948;
-      color: #0a0e16;
-    }
-    .btn-primary:hover { background: #fad86a; }
-    .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
-    .btn-secondary {
-      background: rgba(255,255,255,0.07);
-      color: #94a3b8;
-      border: 1px solid rgba(255,255,255,0.1);
-    }
-    .btn-secondary:hover { background: rgba(255,255,255,0.12); color: #e2e8f0; }
-
-    /* ── Info row / standings (step 2) ──────────────────────────────── */
+    /* ── Info row / standings ─────────────────────────────────────────── */
     .info-row {
       display: flex;
       gap: 2rem;
@@ -392,7 +139,6 @@
     }
     .info-item { font-size: 0.8rem; color: #94a3b8; }
     .info-item strong { color: #f7c948; font-size: 1rem; display: block; }
-
     .standings-wrap { overflow-x: auto; margin-bottom: 0.5rem; }
     .standings-wrap table { min-width: 560px; }
     .standings-wrap tbody td.col-rank { color: #475569; font-size: 0.8rem; }
@@ -424,50 +170,17 @@
     @keyframes spin { to { transform: rotate(360deg); } }
     .loading-text { color: #94a3b8; font-size: 0.9rem; text-align: center; }
 
-    /* ── Banners ─────────────────────────────────────────────────────── */
-    .error-box {
-      background: rgba(45,10,10,0.92);
-      border: 1px solid #7f1d1d;
-      color: #fca5a5;
-      border-radius: 8px;
-      padding: 0.9rem 1.1rem;
-      font-size: 0.875rem;
-      margin-top: 1rem;
-    }
-    .success-box {
-      background: rgba(10,40,20,0.92);
-      border: 1px solid #166534;
-      color: #86efac;
-      border-radius: 8px;
-      padding: 0.9rem 1.1rem;
-      font-size: 0.875rem;
-      margin-top: 1rem;
-    }
-
-    /* ── Results table (step 5) ──────────────────────────────────────── */
-    .meta-row {
-      display: flex;
-      gap: 2rem;
-      margin-bottom: 1.5rem;
-      font-size: 0.875rem;
-      color: #94a3b8;
-    }
+    /* ── Results table ───────────────────────────────────────────────── */
+    .meta-row { display: flex; gap: 2rem; margin-bottom: 1.5rem; font-size: 0.875rem; color: #94a3b8; }
     .meta-row strong { color: #f7c948; font-size: 1.1rem; }
 
     .table-wrap { overflow-x: auto; }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.875rem;
-      min-width: 480px;
-    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.875rem; min-width: 480px; }
     thead th {
       padding: 0.35rem 0.5rem;
       text-align: center;
-      font-size: 0.68rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
+      font-size: 0.68rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.06em;
       color: #64748b;
       border-bottom: 1px solid rgba(255,255,255,0.07);
       white-space: nowrap;
@@ -476,12 +189,7 @@
     tbody tr { border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.1s; }
     tbody tr:hover { background: rgba(255,255,255,0.04); }
     tbody td { padding: 0.35rem 0.5rem; text-align: center; font-size: 0.82rem; }
-    tbody td.col-name {
-      text-align: left;
-      font-weight: 600;
-      color: #e2e8f0;
-      white-space: nowrap;
-    }
+    tbody td.col-name { text-align: left; font-weight: 600; color: #e2e8f0; white-space: nowrap; }
 
     .pos-cell { border-radius: 4px; display: inline-block; width: 100%; padding: 0.2rem 0; }
     .rank-1 { background: rgba(247,201,72,0.18); color: #f7c948; font-weight: 700; }
@@ -492,20 +200,15 @@
     th.col-total { color: #475569; border-left: 1px solid rgba(255,255,255,0.07); }
     td.col-total-val { color: #64748b; font-size: 0.8rem; font-variant-numeric: tabular-nums; border-left: 1px solid rgba(255,255,255,0.07); }
 
-    /* ── Tabs (step 5) ───────────────────────────────────────────────── */
-    .tab-bar {
-      display: flex;
-      border-bottom: 1px solid rgba(255,255,255,0.07);
-      margin-bottom: 0.75rem;
-    }
+    /* ── Tabs ────────────────────────────────────────────────────────── */
+    .tab-bar { display: flex; border-bottom: 1px solid rgba(255,255,255,0.07); margin-bottom: 0.75rem; }
     .tab-btn {
       padding: 0.35rem 0.85rem;
       background: transparent;
       border: none;
       border-bottom: 2px solid transparent;
       color: #475569;
-      font-size: 0.8rem;
-      font-weight: 600;
+      font-size: 0.8rem; font-weight: 600;
       cursor: pointer;
       transition: color 0.15s, border-color 0.15s;
       margin-bottom: -1px;
@@ -517,15 +220,14 @@
       display: inline-block;
       background: #166534;
       color: #86efac;
-      font-size: 0.62rem;
-      font-weight: 700;
+      font-size: 0.62rem; font-weight: 700;
       border-radius: 10px;
       padding: 1px 6px;
       margin-left: 6px;
       vertical-align: middle;
     }
 
-    /* ── HA Slider (tab 1) ───────────────────────────────────────────── */
+    /* ── HA Slider ───────────────────────────────────────────────────── */
     .ha-slider-wrap {
       margin-bottom: 0.75rem;
       padding: 0.6rem 1rem;
@@ -533,37 +235,16 @@
       border: 1px solid rgba(247,201,72,0.12);
       border-radius: 8px;
     }
-    .ha-slider-header {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      margin-bottom: 0.4rem;
-    }
-    .ha-slider-label {
-      font-size: 0.875rem;
-      color: #94a3b8;
-    }
-    .ha-value-display {
-      font-size: 1.2rem;
-      font-weight: 700;
-      color: #f7c948;
-      line-height: 1;
-    }
-    .ha-value-display span {
-      font-size: 0.85rem;
-      font-weight: 400;
-      color: #64748b;
-      margin-left: 2px;
-    }
+    .ha-slider-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 0.4rem; }
+    .ha-slider-label { font-size: 0.875rem; color: #94a3b8; }
+    .ha-value-display { font-size: 1.2rem; font-weight: 700; color: #f7c948; line-height: 1; }
+    .ha-value-display span { font-size: 0.85rem; font-weight: 400; color: #64748b; margin-left: 2px; }
     input[type="range"] {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 100%;
-      height: 6px;
+      -webkit-appearance: none; appearance: none;
+      width: 100%; height: 6px;
       border-radius: 3px;
       background: #1e293b;
-      cursor: pointer;
-      outline: none;
+      cursor: pointer; outline: none;
     }
     input[type="range"]::-webkit-slider-thumb {
       -webkit-appearance: none;
@@ -577,25 +258,14 @@
       width: 22px; height: 22px;
       border-radius: 50%;
       background: #f7c948;
-      cursor: pointer;
-      border: none;
+      cursor: pointer; border: none;
       box-shadow: 0 0 8px rgba(247,201,72,0.45);
     }
-    .ha-minmax {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.7rem;
-      color: #334155;
-      margin-top: 0.3rem;
-    }
-    .ha-configured-note {
-      font-size: 0.75rem;
-      color: #475569;
-      margin-top: 0.6rem;
-    }
+    .ha-minmax { display: flex; justify-content: space-between; font-size: 0.7rem; color: #334155; margin-top: 0.3rem; }
+    .ha-configured-note { font-size: 0.75rem; color: #475569; margin-top: 0.6rem; }
     .ha-configured-note strong { color: #94a3b8; }
 
-    /* ── Tab 2 inline spinner ────────────────────────────────────────── */
+    /* ── Inline spinner (tab 3 while computing) ──────────────────────── */
     .inline-spinner-wrap {
       display: flex;
       flex-direction: column;
@@ -616,7 +286,6 @@
       <rect x="0" y="0" width="140" height="900" fill="#0e4716"/>
       <rect x="0" y="0" width="70"  height="900" fill="#0b3c12"/>
     </pattern>
-    <!-- Stadium floodlights from top corners -->
     <radialGradient id="fl1" cx="210" cy="0" r="1050" gradientUnits="userSpaceOnUse">
       <stop offset="0%"   stop-color="rgba(210,255,190,0.22)"/>
       <stop offset="55%"  stop-color="rgba(160,220,140,0.06)"/>
@@ -627,22 +296,16 @@
       <stop offset="55%"  stop-color="rgba(160,220,140,0.06)"/>
       <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
     </radialGradient>
-    <!-- Warm centre glow (pitch illuminated in middle) -->
     <radialGradient id="cg" cx="700" cy="450" r="320" gradientUnits="userSpaceOnUse">
       <stop offset="0%"   stop-color="rgba(255,255,220,0.10)"/>
       <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
     </radialGradient>
-    <!-- Deep vignette at edges -->
     <radialGradient id="vig" cx="700" cy="450" r="740" gradientUnits="userSpaceOnUse">
       <stop offset="38%"  stop-color="rgba(0,0,0,0)"/>
       <stop offset="100%" stop-color="rgba(0,0,0,0.76)"/>
     </radialGradient>
   </defs>
-
-  <!-- Base grass -->
   <rect width="1400" height="900" fill="url(#mow)"/>
-
-  <!-- Pitch markings -->
   <g fill="none" stroke="rgba(255,255,255,0.40)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
     <rect x="60" y="60" width="1280" height="780"/>
     <line x1="700" y1="60" x2="700" y2="840"/>
@@ -657,7 +320,6 @@
     <path d="M 1320 60 A 20 20 0 0 0 1340 80"/>
     <path d="M 60 820  A 20 20 0 0 1 80 840"/>
     <path d="M 1320 840 A 20 20 0 0 1 1340 820"/>
-    <!-- Goals -->
     <rect x="16"   y="388" width="44" height="124" stroke="rgba(255,255,255,0.22)"/>
     <rect x="1340" y="388" width="44" height="124" stroke="rgba(255,255,255,0.22)"/>
   </g>
@@ -666,85 +328,47 @@
     <circle cx="194"  cy="450" r="5"/>
     <circle cx="1206" cy="450" r="5"/>
   </g>
-
-  <!-- Lighting & atmosphere -->
   <rect width="1400" height="900" fill="url(#fl1)"/>
   <rect width="1400" height="900" fill="url(#fl2)"/>
   <rect width="1400" height="900" fill="url(#cg)"/>
   <rect width="1400" height="900" fill="url(#vig)"/>
 </svg>
 
-<!-- Floating fanta bonus numbers -->
-<div class="bonus-layer" aria-hidden="true">
-  <!-- Row 1: y 4-13% -->
-  <span class="bonus-num neutral" style="--x:5%;  --y:4%;  --sz:1.6rem; --op:0.09; --rot:-7deg;  --dur:20s; --dl:-3s">66</span>
-  <span class="bonus-num pos"     style="--x:18%; --y:7%;  --sz:1.2rem; --op:0.08; --rot:5deg;   --dur:23s; --dl:-8s">+3</span>
-  <span class="bonus-num neutral" style="--x:31%; --y:5%;  --sz:1.4rem; --op:0.08; --rot:-3deg;  --dur:19s; --dl:-1s">72</span>
-  <span class="bonus-num neg"     style="--x:45%; --y:9%;  --sz:1.1rem; --op:0.09; --rot:9deg;   --dur:22s; --dl:-6s">-1</span>
-  <span class="bonus-num neutral" style="--x:58%; --y:5%;  --sz:1.5rem; --op:0.08; --rot:-6deg;  --dur:18s; --dl:-4s">71.5</span>
-  <span class="bonus-num pos"     style="--x:72%; --y:8%;  --sz:1.0rem; --op:0.08; --rot:4deg;   --dur:25s; --dl:-9s">+1.5</span>
-  <span class="bonus-num neutral" style="--x:85%; --y:6%;  --sz:1.3rem; --op:0.09; --rot:-8deg;  --dur:21s; --dl:-2s">78</span>
-  <!-- Row 2: y 17-26% -->
-  <span class="bonus-num neg"     style="--x:9%;  --y:19%; --sz:1.2rem; --op:0.08; --rot:6deg;   --dur:24s; --dl:-7s">-0.5</span>
-  <span class="bonus-num neutral" style="--x:24%; --y:22%; --sz:1.5rem; --op:0.09; --rot:-4deg;  --dur:20s; --dl:-3s">77.5</span>
-  <span class="bonus-num pos"     style="--x:38%; --y:17%; --sz:1.3rem; --op:0.08; --rot:11deg;  --dur:17s; --dl:-5s">+0.5</span>
-  <span class="bonus-num neutral" style="--x:52%; --y:24%; --sz:1.6rem; --op:0.09; --rot:-9deg;  --dur:22s; --dl:-1s">68</span>
-  <span class="bonus-num pos"     style="--x:66%; --y:19%; --sz:1.1rem; --op:0.08; --rot:3deg;   --dur:19s; --dl:-8s">+2</span>
-  <span class="bonus-num neutral" style="--x:79%; --y:23%; --sz:1.4rem; --op:0.09; --rot:-7deg;  --dur:23s; --dl:-4s">65.5</span>
-  <span class="bonus-num neg"     style="--x:93%; --y:17%; --sz:1.0rem; --op:0.08; --rot:8deg;   --dur:21s; --dl:-6s">-2</span>
-  <!-- Row 3: y 31-41% -->
-  <span class="bonus-num neutral" style="--x:3%;  --y:33%; --sz:1.4rem; --op:0.09; --rot:-5deg;  --dur:18s; --dl:-2s">75</span>
-  <span class="bonus-num pos"     style="--x:16%; --y:38%; --sz:1.2rem; --op:0.08; --rot:7deg;   --dur:25s; --dl:-9s">+3.5</span>
-  <span class="bonus-num neutral" style="--x:30%; --y:33%; --sz:1.5rem; --op:0.08; --rot:-3deg;  --dur:20s; --dl:-4s">62</span>
-  <span class="bonus-num neg"     style="--x:44%; --y:40%; --sz:1.1rem; --op:0.09; --rot:10deg;  --dur:23s; --dl:-7s">-1.5</span>
-  <span class="bonus-num neutral" style="--x:57%; --y:31%; --sz:1.6rem; --op:0.08; --rot:-8deg;  --dur:19s; --dl:-1s">80</span>
-  <span class="bonus-num pos"     style="--x:71%; --y:37%; --sz:1.0rem; --op:0.09; --rot:5deg;   --dur:22s; --dl:-5s">+1</span>
-  <span class="bonus-num neutral" style="--x:87%; --y:34%; --sz:1.3rem; --op:0.08; --rot:-6deg;  --dur:17s; --dl:-3s">59</span>
-  <!-- Row 4: y 45-55% -->
-  <span class="bonus-num pos"     style="--x:7%;  --y:47%; --sz:1.5rem; --op:0.09; --rot:4deg;   --dur:21s; --dl:-8s">+4</span>
-  <span class="bonus-num neutral" style="--x:21%; --y:51%; --sz:1.3rem; --op:0.08; --rot:-7deg;  --dur:24s; --dl:-2s">69</span>
-  <span class="bonus-num neg"     style="--x:35%; --y:46%; --sz:1.2rem; --op:0.09; --rot:9deg;   --dur:20s; --dl:-6s">-3</span>
-  <span class="bonus-num neutral" style="--x:49%; --y:53%; --sz:1.6rem; --op:0.08; --rot:-4deg;  --dur:18s; --dl:-9s">73</span>
-  <span class="bonus-num pos"     style="--x:63%; --y:47%; --sz:1.1rem; --op:0.09; --rot:6deg;   --dur:23s; --dl:-4s">+2.5</span>
-  <span class="bonus-num neutral" style="--x:77%; --y:54%; --sz:1.4rem; --op:0.08; --rot:-11deg; --dur:19s; --dl:-1s">58</span>
-  <span class="bonus-num pos"     style="--x:92%; --y:48%; --sz:1.2rem; --op:0.09; --rot:3deg;   --dur:25s; --dl:-7s">+4.5</span>
-  <!-- Row 5: y 59-68% -->
-  <span class="bonus-num neutral" style="--x:4%;  --y:62%; --sz:1.4rem; --op:0.08; --rot:-9deg;  --dur:22s; --dl:-5s">76</span>
-  <span class="bonus-num neg"     style="--x:19%; --y:66%; --sz:1.1rem; --op:0.09; --rot:7deg;   --dur:20s; --dl:-3s">-0.5</span>
-  <span class="bonus-num neutral" style="--x:33%; --y:60%; --sz:1.5rem; --op:0.08; --rot:-3deg;  --dur:17s; --dl:-8s">64</span>
-  <span class="bonus-num pos"     style="--x:47%; --y:67%; --sz:1.2rem; --op:0.09; --rot:8deg;   --dur:24s; --dl:-2s">+1</span>
-  <span class="bonus-num neutral" style="--x:60%; --y:62%; --sz:1.6rem; --op:0.08; --rot:-6deg;  --dur:21s; --dl:-6s">65.6</span>
-  <span class="bonus-num neg"     style="--x:74%; --y:67%; --sz:1.0rem; --op:0.09; --rot:4deg;   --dur:19s; --dl:-9s">-1</span>
-  <span class="bonus-num neutral" style="--x:88%; --y:60%; --sz:1.3rem; --op:0.08; --rot:-8deg;  --dur:23s; --dl:-4s">67</span>
-  <!-- Row 6: y 73-82% -->
-  <span class="bonus-num pos"     style="--x:8%;  --y:75%; --sz:1.3rem; --op:0.09; --rot:5deg;   --dur:20s; --dl:-7s">+3</span>
-  <span class="bonus-num neutral" style="--x:23%; --y:79%; --sz:1.5rem; --op:0.08; --rot:-4deg;  --dur:22s; --dl:-1s">70</span>
-  <span class="bonus-num neg"     style="--x:37%; --y:74%; --sz:1.2rem; --op:0.09; --rot:10deg;  --dur:18s; --dl:-5s">-2</span>
-  <span class="bonus-num neutral" style="--x:51%; --y:81%; --sz:1.4rem; --op:0.08; --rot:-7deg;  --dur:25s; --dl:-3s">74</span>
-  <span class="bonus-num pos"     style="--x:65%; --y:76%; --sz:1.1rem; --op:0.09; --rot:3deg;   --dur:21s; --dl:-8s">+0.5</span>
-  <span class="bonus-num neutral" style="--x:80%; --y:80%; --sz:1.6rem; --op:0.08; --rot:-9deg;  --dur:19s; --dl:-6s">63</span>
-  <span class="bonus-num pos"     style="--x:94%; --y:73%; --sz:1.2rem; --op:0.09; --rot:6deg;   --dur:23s; --dl:-2s">+1.5</span>
-  <!-- Row 7: y 87-96% -->
-  <span class="bonus-num neutral" style="--x:12%; --y:88%; --sz:1.4rem; --op:0.08; --rot:-5deg;  --dur:24s; --dl:-4s">55</span>
-  <span class="bonus-num neg"     style="--x:27%; --y:93%; --sz:1.1rem; --op:0.09; --rot:8deg;   --dur:17s; --dl:-9s">-0.5</span>
-  <span class="bonus-num neutral" style="--x:42%; --y:88%; --sz:1.5rem; --op:0.08; --rot:-3deg;  --dur:20s; --dl:-1s">79</span>
-  <span class="bonus-num pos"     style="--x:56%; --y:94%; --sz:1.3rem; --op:0.09; --rot:7deg;   --dur:22s; --dl:-7s">+2</span>
-  <span class="bonus-num neutral" style="--x:70%; --y:89%; --sz:1.6rem; --op:0.08; --rot:-10deg; --dur:19s; --dl:-5s">71</span>
-  <span class="bonus-num neg"     style="--x:84%; --y:93%; --sz:1.2rem; --op:0.09; --rot:4deg;   --dur:25s; --dl:-3s">-1</span>
-  <span class="bonus-num neutral" style="--x:96%; --y:87%; --sz:1.4rem; --op:0.08; --rot:-6deg;  --dur:21s; --dl:-8s">77</span>
+<!-- Floating bonus numbers (filled by shared.js) -->
+<div class="bonus-layer" aria-hidden="true"></div>
+
+<!-- Mobile top bar -->
+<div class="mobile-topbar">
+  <a href="index.html" class="mobile-topbar-brand">
+    <span class="mobile-topbar-logo">⚽</span>
+    <span class="mobile-topbar-title">FantaGiustiziere</span>
+  </a>
+  <button class="burger-btn" id="burgerBtn" aria-label="Menu" aria-expanded="false">☰</button>
+</div>
+<div class="mobile-menu" id="mobileMenu" hidden>
+  <a href="index.html"   class="nav-link active">⚡ Analisi</a>
+  <a href="info.html"    class="nav-link">📐 Come funziona</a>
+  <a href="about.html"   class="nav-link">🧩 Il Progetto</a>
+  <a href="support.html" class="nav-link">❤️ Supporta</a>
 </div>
 
 <div class="layout">
   <aside class="sidebar">
     <div class="sidebar-brand">
-      <div class="sidebar-logo">⚽</div>
+      <span class="sidebar-logo">⚽</span>
       <div class="sidebar-title">FantaGiustiziere</div>
       <div class="sidebar-subtitle">Ottimizzatore del calendario del Fantacalcio</div>
     </div>
     <nav class="sidebar-nav">
-      <a href="index.html" class="nav-link active">⚡ Analisi</a>
-      <a href="info.html" class="nav-link">📐 Come funziona</a>
+      <a href="index.html"   class="nav-link active">⚡ Analisi</a>
+      <a href="info.html"    class="nav-link">📐 Come funziona</a>
+      <a href="about.html"   class="nav-link">🧩 Il Progetto</a>
+      <a href="support.html" class="nav-link">❤️ Supporta</a>
     </nav>
+    <div class="sidebar-footer">
+      FantaGiustiziere &copy; 2024<br>
+      <a href="about.html">Il Progetto</a> · <a href="support.html">Supporta</a>
+    </div>
   </aside>
 
   <main class="content">
@@ -1074,7 +698,6 @@
       state.matchdayCount = body.matchdayCount;
       state.matches       = body.matches || [];
 
-      // Populate step 2
       document.getElementById('s2PlayerCount').textContent   = body.playerCount;
       document.getElementById('s2MatchdayCount').textContent = body.matchdayCount;
       renderStandings(body.standings);
@@ -1089,7 +712,7 @@
     }
   });
 
-  // ── Step 2: classifica — just navigate ──────────────────────────────────
+  // ── Step 2: classifica ──────────────────────────────────────────────────
   document.getElementById('btnBackTo1').addEventListener('click', () => {
     fileInput.value = '';
     btnAnalyze.disabled = true;
@@ -1097,11 +720,9 @@
     goTo(1);
   });
 
-  document.getElementById('btnGoTo3').addEventListener('click', () => {
-    goTo(3);
-  });
+  document.getElementById('btnGoTo3').addEventListener('click', () => { goTo(3); });
 
-  // ── Step 3: parametri — validate then continue ──────────────────────────
+  // ── Step 3: parametri ───────────────────────────────────────────────────
   const step3Loading = document.getElementById('step3Loading');
   const step3Error   = document.getElementById('step3Error');
   const btnGoTo4     = document.getElementById('btnGoTo4');
@@ -1212,7 +833,6 @@
     btnRun.disabled = true;
     stopPolling();
 
-    // ── Immediately show step 5 with Tab 1 ready ──────────────────────────
     const ha = state.homeAdvantage;
     const haSlider = document.getElementById('haSlider');
     haSlider.value = ha;
@@ -1222,7 +842,6 @@
     renderSimulatedStandings(computeSimulatedStandings(state.matches, ha, state.goalLimit, state.goalOffset));
     renderReverseStandings(computeReverseStandings(state.matches, ha, state.goalLimit, state.goalOffset));
 
-    // Reset Tab 3 to spinner state
     document.getElementById('step5Spinner').hidden  = false;
     document.getElementById('step5Results').hidden  = true;
     document.getElementById('step5Error').hidden    = true;
@@ -1231,7 +850,6 @@
     switchTab(1);
     goTo(5);
 
-    // ── POST /run → receive jobId immediately ─────────────────────────────
     let jobId;
     try {
       const body = new URLSearchParams({
@@ -1250,7 +868,6 @@
       return;
     }
 
-    // ── Poll /status/{jobId} every 2s ─────────────────────────────────────
     pollInterval = setInterval(async () => {
       try {
         const resp = await fetch('/status/' + jobId);
@@ -1306,24 +923,12 @@
   });
 
   // ── Client-side standings simulation ─────────────────────────────────────
-
-  /**
-   * Mirrors Partita.getGoals(): 0 goals below threshold,
-   * then 1 + floor((score - goalLimit) / goalOffset).
-   */
   function getGoals(score, goalLimit, goalOffset) {
     if (score < goalLimit) return 0;
     return 1 + Math.floor((score - goalLimit) / goalOffset);
   }
 
-  /**
-   * Computes league standings from raw match records for a given home advantage.
-   * Home scores in the records are raw Excel values; HA is added here (unless neutral).
-   */
   function computeSimulatedStandings(matches, ha, goalLimit, goalOffset) {
-    // The raw Excel home score already has the configured HA baked in for non-neutral legs
-    // (validation passes only when getGoals(colB) matches the goal result column).
-    // To simulate with a different HA we must strip the original and add the new one.
     const origHA = state.homeAdvantage;
     const p = {};
     function init(name) {
@@ -1333,8 +938,6 @@
     for (const m of matches) {
       init(m.homePlayer);
       init(m.awayPlayer);
-      // totalScore = raw colB value, same as step 2 (readExcel uses homeAddition=0 at /parse time,
-      // so Player stores colB directly and getTotalPoints() sums colB for all legs)
       p[m.homePlayer].totalScore += m.homeScore;
       p[m.awayPlayer].totalScore += m.awayScore;
 
@@ -1362,15 +965,6 @@
     });
   }
 
-  /**
-   * Computes standings with home and away swapped for every match.
-   * m.homeScore = colB = pureHomeScore + origHA (non-neutral) or pureHomeScore (neutral).
-   * m.awayScore = colC = pureAwayScore (never has HA baked in).
-   * After reversal:
-   *   new home = original away → effective score = m.awayScore + ha  (add slider HA)
-   *   new away = original home → effective score = m.homeScore - origHA  (strip baked-in HA)
-   * Neutral legs: neither side gets HA regardless of slider.
-   */
   function computeReverseStandings(matches, ha, goalLimit, goalOffset) {
     const origHA = state.homeAdvantage;
     const p = {};
@@ -1381,18 +975,15 @@
     for (const m of matches) {
       init(m.homePlayer);
       init(m.awayPlayer);
-      // totalScore: each player's own raw score (unchanged by reversal)
       p[m.homePlayer].totalScore += m.homeScore;
       p[m.awayPlayer].totalScore += m.awayScore;
 
-      // In the reversed match: m.awayPlayer is home, m.homePlayer is away
       const effectiveNewHome = m.neutral ? m.awayScore : (m.awayScore + ha);
       const effectiveNewAway = m.neutral ? m.homeScore : (m.homeScore - origHA);
 
       const hg = getGoals(effectiveNewHome, goalLimit, goalOffset);
       const ag = getGoals(effectiveNewAway, goalLimit, goalOffset);
 
-      // m.awayPlayer is now the home side
       p[m.awayPlayer].goalsFor     += hg;  p[m.awayPlayer].goalsAgainst += ag;
       p[m.homePlayer].goalsFor     += ag;  p[m.homePlayer].goalsAgainst += hg;
 
@@ -1422,12 +1013,8 @@
       return `<tr>
         <td class="col-rank">${i + 1}</td>
         <td class="col-name">${esc(s.player)}</td>
-        <td>${played}</td>
-        <td>${s.won}</td>
-        <td>${s.drawn}</td>
-        <td>${s.lost}</td>
-        <td>${s.goalsFor}</td>
-        <td>${s.goalsAgainst}</td>
+        <td>${played}</td><td>${s.won}</td><td>${s.drawn}</td><td>${s.lost}</td>
+        <td>${s.goalsFor}</td><td>${s.goalsAgainst}</td>
         <td class="${drClass}">${drText}</td>
         <td class="col-pts">${s.points}</td>
         <td>${s.totalScore.toLocaleString('it-IT', {maximumFractionDigits: 1})}</td>
@@ -1444,20 +1031,14 @@
       return `<tr>
         <td class="col-rank">${i + 1}</td>
         <td class="col-name">${esc(s.player)}</td>
-        <td>${played}</td>
-        <td>${s.won}</td>
-        <td>${s.drawn}</td>
-        <td>${s.lost}</td>
-        <td>${s.goalsFor}</td>
-        <td>${s.goalsAgainst}</td>
+        <td>${played}</td><td>${s.won}</td><td>${s.drawn}</td><td>${s.lost}</td>
+        <td>${s.goalsFor}</td><td>${s.goalsAgainst}</td>
         <td class="${drClass}">${drText}</td>
         <td class="col-pts">${s.points}</td>
         <td>${s.totalScore.toLocaleString('it-IT', {maximumFractionDigits: 1})}</td>
       </tr>`;
     }).join('');
   }
-
-  // ── Render helpers ────────────────────────────────────────────────────────
 
   function renderStandings(rows) {
     const tbody = document.getElementById('standingsBody');
@@ -1467,12 +1048,8 @@
       return `<tr>
         <td class="col-rank">${i + 1}</td>
         <td class="col-name">${esc(s.player)}</td>
-        <td>${s.played}</td>
-        <td>${s.won}</td>
-        <td>${s.drawn}</td>
-        <td>${s.lost}</td>
-        <td>${s.goalsFor}</td>
-        <td>${s.goalsAgainst}</td>
+        <td>${s.played}</td><td>${s.won}</td><td>${s.drawn}</td><td>${s.lost}</td>
+        <td>${s.goalsFor}</td><td>${s.goalsAgainst}</td>
         <td class="${drClass}">${drText}</td>
         <td class="col-pts">${s.points}</td>
         <td>${s.totalScore.toLocaleString('it-IT', {maximumFractionDigits: 1})}</td>
@@ -1512,5 +1089,6 @@
     return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 </script>
+<script src="shared.js"></script>
 </body>
 </html>

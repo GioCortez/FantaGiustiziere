@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
@@ -22,6 +23,7 @@ import org.fanta.corte.services.CalendarPermutator.PartialResult;
 import org.fanta.corte.services.ResultsParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -38,6 +40,9 @@ public class FantaController {
 
     @Value("${computation.timeout-minutes:30}")
     private long computationTimeoutMinutes;
+
+    @Autowired
+    private Executor computationExecutor;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FantaController.class.getSimpleName());
 
@@ -182,6 +187,9 @@ public class FantaController {
         if (goalOffset <= 0) {
             return ResponseEntity.badRequest().body("L'intervallo gol deve essere un intero maggiore di 0.");
         }
+        if (threads < -1 || threads == 0 || threads > 64) {
+            return ResponseEntity.badRequest().body("Il parametro threads deve essere -1 (auto), 1 (single-thread), o un intero tra 2 e 64.");
+        }
         ParseSession session = sessions.remove(token);
         if (session == null) {
             return ResponseEntity.badRequest().body(
@@ -216,7 +224,7 @@ public class FantaController {
                     LOGGER.warn("Could not delete temp file {}: {}", session.tempFile, e.getMessage());
                 }
             }
-        });
+        }, computationExecutor);
 
         return ResponseEntity.accepted().body(Map.of("jobId", jobId));
     }
