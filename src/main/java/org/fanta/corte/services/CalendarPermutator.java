@@ -83,12 +83,21 @@ public class CalendarPermutator {
 	public PartialResult computePermutations(long permutationLimits, int threads) {
 		String[] originalElements = players.keySet().toArray(new String[0]);
 		int n = originalElements.length;
+		String limitLabel = permutationLimits > 0 ? String.valueOf(permutationLimits) : "unlimited";
+		String threadLabel = threads == 1 ? "single-thread" : (threads <= 0 ? "auto (" + Runtime.getRuntime().availableProcessors() + " cores)" : threads + " threads");
+		LOGGER.info("Permutation started — players={} limit={} mode={}", n, limitLabel, threadLabel);
 
+		long startNanos = System.nanoTime();
+		PartialResult result;
 		if (threads == 1) {
-			return runSingleThread(originalElements, n, permutationLimits);
+			result = runSingleThread(originalElements, n, permutationLimits);
 		} else {
-			return runMultiThread(originalElements, n, permutationLimits, threads);
+			result = runMultiThread(originalElements, n, permutationLimits, threads);
 		}
+		long elapsedMs = (System.nanoTime() - startNanos) / 1_000_000;
+		LOGGER.info("Permutation ended — processed={} elapsed={}ms ({}s)",
+				result.permutationCounter, elapsedMs, elapsedMs / 1000);
+		return result;
 	}
 
 	// -------------------------------------------------------------------------
