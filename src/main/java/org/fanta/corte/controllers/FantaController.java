@@ -4,12 +4,15 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
@@ -23,6 +26,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -36,8 +41,8 @@ public class FantaController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FantaController.class.getSimpleName());
 
-    // In-memory session store: token → session data. Cleaned up lazily on each /parse call.
     private final ConcurrentHashMap<String, ParseSession> sessions = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Job> jobs = new ConcurrentHashMap<>();
 
     // -------------------------------------------------------------------------
     // Step 1: parse the uploaded file, return player list and a session token
@@ -167,7 +172,7 @@ public class FantaController {
             @RequestParam(defaultValue = "-1") long permutationLimit,
             @RequestParam(defaultValue = "66") int goalLimit,
             @RequestParam(defaultValue = "6")  int goalOffset
-    ) throws IOException, InvalidFormatException {
+    ) {
         if (homeAdvantage.compareTo(BigDecimal.ZERO) < 0) {
             return ResponseEntity.badRequest().body("Il vantaggio casalingo non può essere negativo.");
         }
@@ -183,24 +188,56 @@ public class FantaController {
                     "Sessione scaduta o non trovata. Carica di nuovo il file.");
         }
 
-        try {
-            LOGGER.info("Running: playerCount={} homeAdvantage={} goalLimit={} goalOffset={} threads={} limit={}",
-                    session.playerCount, homeAdvantage, goalLimit, goalOffset, threads, permutationLimit);
+        String jobId = UUID.randomUUID().toString();
+        Job job = new Job(jobId);
+        jobs.put(jobId, job);
+        LOGGER.info("Job {} queued: playerCount={} homeAdvantage={} goalLimit={} goalOffset={} threads={} limit={}",
+                jobId, session.playerCount, homeAdvantage, goalLimit, goalOffset, threads, permutationLimit);
 
-            Map<String, Player> players = ResultsParser.readExcel(
-                    session.tempFile.toString(), homeAdvantage, false);
-            CalendarPermutator permutator = new CalendarPermutator(players, homeAdvantage, goalLimit, goalOffset, computationTimeoutMinutes);
-            PartialResult result = permutator.computePermutations(permutationLimit, threads);
-
-            return ResponseEntity.ok(RunResult.from(result));
-
-        } finally {
+        CompletableFuture.runAsync(() -> {
+            job.status = JobStatus.RUNNING;
             try {
-                Files.deleteIfExists(session.tempFile);
-            } catch (IOException e) {
-                LOGGER.warn("Could not delete temp file {}: {}", session.tempFile, e.getMessage());
+                Map<String, Player> players = ResultsParser.readExcel(
+                        session.tempFile.toString(), homeAdvantage, false);
+                CalendarPermutator permutator = new CalendarPermutator(
+                        players, homeAdvantage, goalLimit, goalOffset, computationTimeoutMinutes);
+                PartialResult result = permutator.computePermutations(permutationLimit, threads, job.progressCounter);
+                job.result = RunResult.from(result);
+                job.status = JobStatus.DONE;
+                LOGGER.info("Job {} completed: {} permutations", jobId, result.permutationCounter);
+            } catch (Exception e) {
+                job.error = e.getMessage();
+                job.status = JobStatus.ERROR;
+                LOGGER.error("Job {} failed: {}", jobId, e.getMessage(), e);
+            } finally {
+                try {
+                    Files.deleteIfExists(session.tempFile);
+                } catch (IOException e) {
+                    LOGGER.warn("Could not delete temp file {}: {}", session.tempFile, e.getMessage());
+                }
             }
+        });
+
+        return ResponseEntity.accepted().body(Map.of("jobId", jobId));
+    }
+
+    // -------------------------------------------------------------------------
+    // Step 3b: poll job status
+    // -------------------------------------------------------------------------
+
+    @GetMapping("/status/{jobId}")
+    public ResponseEntity<?> status(@PathVariable String jobId) {
+        Job job = jobs.get(jobId);
+        if (job == null) {
+            return ResponseEntity.notFound().build();
         }
+        StatusResponse resp = new StatusResponse();
+        resp.status    = job.status.name();
+        resp.processed = job.progressCounter.get();
+        resp.elapsedMs = Duration.between(job.startedAt, Instant.now()).toMillis();
+        if (job.status == JobStatus.DONE)  resp.result = job.result;
+        if (job.status == JobStatus.ERROR) resp.error  = job.error;
+        return ResponseEntity.ok(resp);
     }
 
     // -------------------------------------------------------------------------
@@ -218,6 +255,13 @@ public class FantaController {
             }
             return false;
         });
+        jobs.entrySet().removeIf(e -> {
+            if (e.getValue().createdAt.isBefore(cutoff)) {
+                LOGGER.info("Evicted stale job: {}", e.getKey());
+                return true;
+            }
+            return false;
+        });
     }
 
     private static class ParseSession {
@@ -230,5 +274,27 @@ public class FantaController {
             this.playerCount = playerCount;
             this.createdAt = createdAt;
         }
+    }
+
+    private enum JobStatus { PENDING, RUNNING, DONE, ERROR }
+
+    private static class Job {
+        final String id;
+        volatile JobStatus status = JobStatus.PENDING;
+        final AtomicLong progressCounter = new AtomicLong(0);
+        final Instant startedAt = Instant.now();
+        final Instant createdAt = Instant.now();
+        volatile RunResult result;
+        volatile String error;
+
+        Job(String id) { this.id = id; }
+    }
+
+    private static class StatusResponse {
+        public String status;
+        public long processed;
+        public long elapsedMs;
+        public RunResult result;
+        public String error;
     }
 }

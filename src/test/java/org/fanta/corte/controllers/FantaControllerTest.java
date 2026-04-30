@@ -17,6 +17,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.io.ByteArrayOutputStream;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -179,21 +180,39 @@ class FantaControllerTest {
 
     // ── /run ──────────────────────────────────────────────────────────────────
 
+    /** Polls GET /status/{jobId} every 100 ms until DONE, then returns the result node. */
+    private JsonNode pollUntilDone(String jobId) throws Exception {
+        for (int i = 0; i < 100; i++) {
+            Thread.sleep(100);
+            MvcResult sr = mockMvc.perform(get("/status/" + jobId))
+                    .andExpect(status().isOk())
+                    .andReturn();
+            JsonNode json = objectMapper.readTree(sr.getResponse().getContentAsString());
+            String s = json.get("status").asText();
+            if ("DONE".equals(s))  return json.get("result");
+            if ("ERROR".equals(s)) fail("Job failed: " + json.get("error").asText());
+        }
+        fail("Job did not complete within 10 seconds");
+        return null;
+    }
+
     @Test
-    void run_validToken_returns200WithPermutationResult() throws Exception {
+    void run_validToken_returns202ThenCompletesWithResult() throws Exception {
         String token = parseAndGetToken();
-        MvcResult result = mockMvc.perform(post("/run")
+        MvcResult runResult = mockMvc.perform(post("/run")
                         .param("token", token)
                         .param("homeAdvantage", "0")
                         .param("threads", "1")
                         .param("permutationLimit", "-1")
                         .param("goalLimit", "66")
                         .param("goalOffset", "6"))
-                .andExpect(status().isOk())
+                .andExpect(status().isAccepted())
                 .andReturn();
-        JsonNode json = objectMapper.readTree(result.getResponse().getContentAsString());
-        assertTrue(json.get("permutationCount").asInt() > 0);
-        assertEquals(4, json.get("statistics").size());
+        String jobId = objectMapper.readTree(runResult.getResponse().getContentAsString())
+                .get("jobId").asText();
+        JsonNode result = pollUntilDone(jobId);
+        assertTrue(result.get("permutationCount").asInt() > 0);
+        assertEquals(4, result.get("statistics").size());
     }
 
     @Test
@@ -220,7 +239,7 @@ class FantaControllerTest {
                         .param("threads", "1")
                         .param("goalLimit", "66")
                         .param("goalOffset", "6"))
-                .andExpect(status().isOk());
+                .andExpect(status().isAccepted());
         mockMvc.perform(post("/run")
                         .param("token", token)
                         .param("homeAdvantage", "0")
@@ -245,6 +264,6 @@ class FantaControllerTest {
                         .param("threads", "1")
                         .param("goalLimit", "66")
                         .param("goalOffset", "6"))
-                .andExpect(status().isOk());
+                .andExpect(status().isAccepted());
     }
 }

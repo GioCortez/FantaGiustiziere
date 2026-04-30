@@ -5,7 +5,8 @@
       "Bash(mvn compile:*)",
       "WebSearch",
       "WebFetch(domain:github.com)",
-      "WebFetch(domain:spring.io)"
+      "WebFetch(domain:spring.io)",
+      "PowerShell(mvn compile *)"
     ]
   }
 }

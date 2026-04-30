@@ -39,6 +39,7 @@ public class CalendarPermutator {
 	private final int goalLimit;
 	private final int goalOffset;
 	private final long timeoutMinutes;
+	private volatile AtomicLong externalProgressCounter;
 
 	/** Backward-compatible constructor — uses default goal thresholds and default timeout. */
 	public CalendarPermutator(Map<String, Player> players, BigDecimal homeAdvantage) {
@@ -80,7 +81,18 @@ public class CalendarPermutator {
 	 * @param permutationLimits max permutations to process (-1 = unlimited)
 	 * @param threads           1 = single-thread; -1 = auto (availableProcessors); N > 1 = fixed pool
 	 */
+	/** Backward-compatible overload — no external progress tracking. */
 	public PartialResult computePermutations(long permutationLimits, int threads) {
+		return computePermutations(permutationLimits, threads, null);
+	}
+
+	/**
+	 * @param progressCounter shared counter incremented after each permutation;
+	 *                        callers can read it at any time for a live progress figure.
+	 *                        Pass null to skip.
+	 */
+	public PartialResult computePermutations(long permutationLimits, int threads, AtomicLong progressCounter) {
+		this.externalProgressCounter = progressCounter;
 		String[] originalElements = players.keySet().toArray(new String[0]);
 		int n = originalElements.length;
 		String limitLabel = permutationLimits > 0 ? String.valueOf(permutationLimits) : "unlimited";
@@ -284,6 +296,7 @@ public class CalendarPermutator {
 			posizione++;
 		}
 		result.permutationCounter++;
+		if (externalProgressCounter != null) externalProgressCounter.incrementAndGet();
 	}
 
 	// -------------------------------------------------------------------------
