@@ -410,7 +410,7 @@
 
       <div class="field">
         <label>File risultati (.xlsx)</label>
-        <input type="file" id="fileInput" accept=".xlsx,.xls">
+        <input type="file" id="fileInput" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel">
       </div>
 
       <div id="step1Error" class="error-box" hidden></div>
@@ -874,9 +874,12 @@
         if (!resp.ok) { stopPolling(); showRunError(`Errore stato: HTTP ${resp.status}`); return; }
         const data = await resp.json();
 
-        const elapsed = (data.elapsedMs / 1000).toFixed(0);
+        const elapsed   = (data.elapsedMs / 1000).toFixed(0);
+        const limit     = parseInt(document.querySelector('input[name="coverage"]:checked').value, 10);
+        const total     = limit > 0 ? limit : factorial(state.playerCount);
+        const pct       = total > 0 ? Math.min(100, (data.processed / total * 100)).toFixed(1) : '…';
         document.getElementById('progressText').textContent =
-          `Elaborate: ${data.processed.toLocaleString('it-IT')} permutazioni in ${elapsed}s`;
+          `Elaborate: ${data.processed.toLocaleString('it-IT')} permutazioni (${pct}%) in ${elapsed}s`;
 
         if (data.status === 'DONE') {
           stopPolling();
