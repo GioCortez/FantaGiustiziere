@@ -250,6 +250,16 @@ body {
   margin-top: 1rem;
 }
 
+.warning-box {
+  background: rgba(40,30,5,0.92);
+  border: 1px solid #92400e;
+  color: #fcd34d;
+  border-radius: 8px;
+  padding: 0.9rem 1.1rem;
+  font-size: 0.875rem;
+  margin-top: 1rem;
+}
+
 .success-box {
   background: rgba(10,40,20,0.92);
   border: 1px solid #166534;

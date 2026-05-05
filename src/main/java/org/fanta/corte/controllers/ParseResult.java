@@ -9,6 +9,7 @@ public class ParseResult {
     public String token;
     public int playerCount;
     public int matchdayCount;
+    public int incompleteMatchdays;
     public List<PlayerSummary> players;
     public List<StandingRow> standings;
     public List<ResultsParser.MatchRecord> matches;

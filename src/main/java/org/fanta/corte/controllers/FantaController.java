@@ -75,12 +75,21 @@ public class FantaController {
                     .map(p -> p.getResults().size())
                     .orElse(0);
 
+            long incompleteMatchdays = 0;
+            if (!players.isEmpty()) {
+                java.util.Set<Integer> allMatchdays = players.values().iterator().next().getResults().keySet();
+                incompleteMatchdays = allMatchdays.stream()
+                        .filter(g -> players.values().stream()
+                                .allMatch(p -> BigDecimal.ZERO.compareTo(p.getResults().get(g)) == 0))
+                        .count();
+            }
+
             String token = UUID.randomUUID().toString();
             sessions.put(token, new ParseSession(tempFile, playerCount, Instant.now()));
             sessionCreated = true;
 
-            LOGGER.info("Parsed file {}: {} players, {} matchdays, token={}",
-                    file.getOriginalFilename(), playerCount, matchdayCount, token);
+            LOGGER.info("Parsed file {}: {} players, {} matchdays ({} incomplete), token={}",
+                    file.getOriginalFilename(), playerCount, matchdayCount, incompleteMatchdays, token);
 
             Map<String, int[]> standingsData = ResultsParser.readStandings(tempFile.toString());
 
@@ -88,6 +97,7 @@ public class FantaController {
             result.token = token;
             result.playerCount = playerCount;
             result.matchdayCount = matchdayCount;
+            result.incompleteMatchdays = (int) incompleteMatchdays;
             result.players = players.values().stream()
                     .map(p -> {
                         ParseResult.PlayerSummary ps = new ParseResult.PlayerSummary();
