@@ -8,6 +8,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -15,6 +16,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.fanta.corte.datamodel.Player;
@@ -54,7 +57,8 @@ public class FantaController {
     // -------------------------------------------------------------------------
 
     @PostMapping(value = "/parse", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> parse(@RequestParam("file") MultipartFile file) throws IOException, InvalidFormatException {
+    public ResponseEntity<?> parse(@RequestParam("file") MultipartFile file,
+                                   HttpServletRequest request) throws IOException, InvalidFormatException {
 
         Path tempFile = Files.createTempFile("fanta-", ".xlsx");
         boolean sessionCreated = false;
@@ -84,12 +88,15 @@ public class FantaController {
                         .count();
             }
 
+            List<String> playerNames = players.keySet().stream().sorted().collect(Collectors.toList());
             String token = UUID.randomUUID().toString();
-            sessions.put(token, new ParseSession(tempFile, playerCount, Instant.now()));
+            sessions.put(token, new ParseSession(tempFile, playerCount, playerNames,
+                    file.getOriginalFilename(), Instant.now()));
             sessionCreated = true;
 
-            LOGGER.info("Parsed file {}: {} players, {} matchdays ({} incomplete), token={}",
-                    file.getOriginalFilename(), playerCount, matchdayCount, incompleteMatchdays, token);
+            LOGGER.info("File uploaded — ip='{}' file='{}' players={} matchdays={} incomplete={} token={}",
+                    clientIp(request), file.getOriginalFilename(), playerCount,
+                    matchdayCount, incompleteMatchdays, token);
 
             Map<String, int[]> standingsData = ResultsParser.readStandings(tempFile.toString());
 
@@ -209,14 +216,16 @@ public class FantaController {
         String jobId = UUID.randomUUID().toString();
         Job job = new Job(jobId);
         jobs.put(jobId, job);
-        LOGGER.info("Job {} queued: playerCount={} homeAdvantage={} goalLimit={} goalOffset={} threads={} limit={}",
-                jobId, session.playerCount, homeAdvantage, goalLimit, goalOffset, threads, permutationLimit);
-
         CompletableFuture.runAsync(() -> {
             job.status = JobStatus.RUNNING;
             try {
                 Map<String, Player> players = ResultsParser.readExcel(
                         session.tempFile.toString(), homeAdvantage, false);
+                LOGGER.info("=== ANALYSIS STARTED === job={} file='{}' players={} [{}] homeAdvantage={} goalLimit={} goalOffset={} threads={} permLimit={}",
+                        jobId, session.originalFilename, session.playerCount,
+                        String.join(", ", session.playerNames),
+                        homeAdvantage, goalLimit, goalOffset, threads,
+                        permutationLimit < 0 ? "unlimited" : permutationLimit);
                 CalendarPermutator permutator = new CalendarPermutator(
                         players, homeAdvantage, goalLimit, goalOffset, computationTimeoutMinutes);
                 PartialResult result = permutator.computePermutations(permutationLimit, threads, job.progressCounter);
@@ -282,14 +291,27 @@ public class FantaController {
         });
     }
 
+    private static String clientIp(HttpServletRequest request) {
+        String forwarded = request.getHeader("X-Forwarded-For");
+        if (forwarded != null && !forwarded.isBlank()) {
+            return forwarded.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
+    }
+
     private static class ParseSession {
         final Path tempFile;
         final int playerCount;
+        final List<String> playerNames;
+        final String originalFilename;
         final Instant createdAt;
 
-        ParseSession(Path tempFile, int playerCount, Instant createdAt) {
+        ParseSession(Path tempFile, int playerCount, List<String> playerNames,
+                     String originalFilename, Instant createdAt) {
             this.tempFile = tempFile;
             this.playerCount = playerCount;
+            this.playerNames = playerNames;
+            this.originalFilename = originalFilename;
             this.createdAt = createdAt;
         }
     }

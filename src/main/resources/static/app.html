@@ -1,0 +1,1174 @@
+﻿<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <title>FantaGiustiziere</title>
+  <meta name="description" content="Scopri se il calendario del tuo Fantacalcio era davvero contro di te. Analisi statistica gratuita su tutte le possibili combinazioni di calendari.">
+  <meta property="og:type"        content="website">
+  <meta property="og:site_name"   content="FantaGiustiziere">
+  <meta property="og:locale"      content="it_IT">
+  <meta property="og:url"         content="https://PRODUCTION_URL/">
+  <meta property="og:title"       content="FantaGiustiziere — Analisi del calendario">
+  <meta property="og:description" content="Scopri se il calendario del tuo Fantacalcio era davvero contro di te. Analisi statistica gratuita su tutte le possibili combinazioni di calendari.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap">
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    /* ── Content layout override ─────────────────────────────────────── */
+    .content-inner { max-width: 100%; }
+    .content-inner > * { max-width: 720px; margin-left: auto; margin-right: auto; }
+    #step5 { max-width: 100%; }
+
+    /* ── Inline guide ────────────────────────────────────────────────── */
+    .guide-steps { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.75rem; }
+    .guide-step  { display: flex; gap: 0.85rem; align-items: flex-start; }
+    .guide-num {
+      width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0;
+      background: rgba(247,201,72,0.12); border: 1px solid rgba(247,201,72,0.3);
+      color: #f7c948; font-size: 0.72rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .guide-text { font-size: 0.84rem; color: #94a3b8; line-height: 1.55; padding-top: 2px; }
+    .guide-text strong { color: #e2e8f0; }
+
+    /* ── Step indicator ──────────────────────────────────────────────── */
+    .steps-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1rem;
+      gap: 0;
+    }
+    .step-node {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.35rem;
+      position: relative;
+      z-index: 1;
+    }
+    .step-circle {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem; font-weight: 700;
+      background: rgba(10, 14, 22, 0.85);
+      border: 2px solid #334155;
+      color: #475569;
+      transition: all 0.25s;
+    }
+    .step-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #475569;
+      transition: color 0.25s;
+      white-space: nowrap;
+    }
+    .step-connector {
+      flex: 1;
+      height: 2px;
+      background: #1e293b;
+      margin: 0 4px;
+      margin-bottom: 22px;
+      min-width: 24px;
+      max-width: 60px;
+      transition: background 0.25s;
+    }
+    .step-node.active .step-circle { background: #f7c948; border-color: #f7c948; color: #0a0e16; }
+    .step-node.active .step-label { color: #f7c948; }
+    .step-node.done .step-circle { background: #166534; border-color: #16a34a; color: #86efac; }
+    .step-node.done .step-label { color: #4ade80; }
+    .step-connector.done { background: #166534; }
+
+    /* Results card sits above the floating bonus layer (z-index 50) */
+    #step5 .card { background: rgba(7, 9, 16, 0.97); z-index: 60; }
+
+    /* ── Form fields ─────────────────────────────────────────────────── */
+    .field { margin-bottom: 1.25rem; }
+    .field label { display: block; font-size: 0.875rem; font-weight: 500; color: #cbd5e1; margin-bottom: 0.4rem; }
+    .field small { color: #475569; font-size: 0.78rem; }
+
+    input[type="file"] {
+      width: 100%;
+      padding: 2rem 1rem;
+      background: rgba(5,8,15,0.75);
+      border: 2px dashed rgba(255,255,255,0.12);
+      border-radius: 8px;
+      color: #94a3b8;
+      font-size: 0.9rem;
+      cursor: pointer;
+      text-align: center;
+      transition: border-color 0.15s;
+    }
+    input[type="file"]:hover { border-color: #f7c948; color: #e2e8f0; }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 0.65rem 1rem;
+      background: rgba(5,8,15,0.75);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      color: #e2e8f0;
+      font-size: 0.9rem;
+    }
+    input[type="number"]:focus { outline: none; border-color: #f7c948; }
+
+    /* ── Coverage selector ───────────────────────────────────────────── */
+    .coverage-info { margin-bottom: 0.6rem; font-size: 0.8rem; color: #64748b; line-height: 1.5; }
+    .coverage-grid { display: flex; flex-direction: column; gap: 0.4rem; }
+    .coverage-row {
+      display: grid;
+      grid-template-columns: auto 1fr auto auto;
+      align-items: center;
+      column-gap: 1rem;
+      padding: 0.65rem 1rem;
+      background: rgba(5,8,15,0.75);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .coverage-row:has(input:checked) { border-color: #f7c948; background: rgba(30,25,5,0.85); }
+    .coverage-row input[type="radio"] { accent-color: #f7c948; }
+    .coverage-name  { font-size: 0.9rem; font-weight: 600; color: #e2e8f0; }
+    .coverage-count { font-size: 0.82rem; color: #94a3b8; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .coverage-hint  { font-size: 0.78rem; color: #64748b; white-space: nowrap; text-align: right; }
+    .coverage-hint.slow { color: #f59e0b; }
+
+    /* ── Info row / standings ─────────────────────────────────────────── */
+    .info-row {
+      display: flex;
+      gap: 2rem;
+      margin-bottom: 0.75rem;
+      padding: 0.5rem 1rem;
+      background: rgba(247,201,72,0.07);
+      border: 1px solid rgba(247,201,72,0.18);
+      border-radius: 8px;
+    }
+    .info-item { font-size: 0.8rem; color: #94a3b8; }
+    .info-item strong { color: #f7c948; font-size: 1rem; display: block; }
+    .standings-wrap { overflow-x: auto; margin-bottom: 0.5rem; }
+    .standings-wrap table { min-width: 560px; }
+    .standings-wrap tbody td.col-rank { color: #475569; font-size: 0.8rem; }
+    .standings-wrap tbody td.col-pts { font-weight: 700; color: #f7c948; }
+    .standings-wrap tbody td.col-dr-pos { color: #4ade80; }
+    .standings-wrap tbody td.col-dr-neg { color: #f87171; }
+
+    /* ── Loading overlay ─────────────────────────────────────────────── */
+    .loading-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(10,14,22,0.82);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      backdrop-filter: blur(4px);
+      z-index: 10;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid rgba(255,255,255,0.1);
+      border-top-color: #f7c948;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { color: #94a3b8; font-size: 0.9rem; text-align: center; }
+
+    /* ── Results table ───────────────────────────────────────────────── */
+    .meta-row { display: flex; gap: 2rem; margin-bottom: 1.5rem; font-size: 0.875rem; color: #94a3b8; }
+    .meta-row strong { color: #f7c948; font-size: 1.1rem; }
+
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.875rem; min-width: 480px; }
+    thead th {
+      padding: 0.35rem 0.5rem;
+      text-align: center;
+      font-size: 0.68rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      color: #64748b;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      white-space: nowrap;
+    }
+    thead th.col-name { text-align: left; }
+    tbody tr { border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.1s; }
+    tbody tr:hover { background: rgba(255,255,255,0.04); }
+    tbody td { padding: 0.35rem 0.5rem; text-align: center; font-size: 0.82rem; }
+    tbody td.col-name { text-align: left; font-weight: 600; color: #e2e8f0; white-space: nowrap; }
+
+    .pos-cell { border-radius: 4px; display: inline-block; width: 100%; padding: 0.2rem 0; }
+    .rank-1 { background: rgba(247,201,72,0.18); color: #f7c948; font-weight: 700; }
+    .rank-2 { background: rgba(192,192,192,0.12); color: #cbd5e1; font-weight: 600; }
+    .rank-3 { background: rgba(180,120,60,0.15); color: #c8956c; font-weight: 600; }
+    .rank-other { color: #475569; }
+    .pct-bar { display: block; font-size: 0.68rem; margin-top: 1px; color: #475569; }
+    th.col-total { color: #475569; border-left: 1px solid rgba(255,255,255,0.07); }
+    td.col-total-val { color: #64748b; font-size: 0.8rem; font-variant-numeric: tabular-nums; border-left: 1px solid rgba(255,255,255,0.07); }
+
+    /* ── Tabs ────────────────────────────────────────────────────────── */
+    .tab-bar { display: flex; border-bottom: 1px solid rgba(255,255,255,0.07); margin-bottom: 0.75rem; }
+    .tab-btn {
+      padding: 0.35rem 0.85rem;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: #475569;
+      font-size: 0.8rem; font-weight: 600;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+      margin-bottom: -1px;
+      white-space: nowrap;
+    }
+    .tab-btn:hover { color: #94a3b8; }
+    .tab-btn.active { color: #f7c948; border-bottom-color: #f7c948; }
+    .tab-badge {
+      display: inline-block;
+      background: #166534;
+      color: #86efac;
+      font-size: 0.62rem; font-weight: 700;
+      border-radius: 10px;
+      padding: 1px 6px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+
+    /* ── HA Slider ───────────────────────────────────────────────────── */
+    .ha-slider-wrap {
+      margin-bottom: 0.75rem;
+      padding: 0.6rem 1rem;
+      background: rgba(247,201,72,0.05);
+      border: 1px solid rgba(247,201,72,0.12);
+      border-radius: 8px;
+    }
+    .ha-slider-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 0.4rem; }
+    .ha-slider-label { font-size: 0.875rem; color: #94a3b8; }
+    .ha-value-display { font-size: 1.2rem; font-weight: 700; color: #f7c948; line-height: 1; }
+    .ha-value-display span { font-size: 0.85rem; font-weight: 400; color: #64748b; margin-left: 2px; }
+    input[type="range"] {
+      -webkit-appearance: none; appearance: none;
+      width: 100%; height: 6px;
+      border-radius: 3px;
+      background: #1e293b;
+      cursor: pointer; outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: #f7c948;
+      cursor: pointer;
+      box-shadow: 0 0 8px rgba(247,201,72,0.45);
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: #f7c948;
+      cursor: pointer; border: none;
+      box-shadow: 0 0 8px rgba(247,201,72,0.45);
+    }
+    .ha-minmax { display: flex; justify-content: space-between; font-size: 0.7rem; color: #334155; margin-top: 0.3rem; }
+    .ha-configured-note { font-size: 0.75rem; color: #475569; margin-top: 0.6rem; }
+    .ha-configured-note strong { color: #94a3b8; }
+
+    /* ── Inline spinner (tab 3 while computing) ──────────────────────── */
+    .inline-spinner-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      padding: 3rem 0;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Football pitch SVG background -->
+<svg class="field-bg" viewBox="0 0 1400 900" preserveAspectRatio="xMidYMid slice"
+     xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <defs>
+    <pattern id="mow" x="0" y="0" width="140" height="900" patternUnits="userSpaceOnUse">
+      <rect x="0" y="0" width="140" height="900" fill="#0e4716"/>
+      <rect x="0" y="0" width="70"  height="900" fill="#0b3c12"/>
+    </pattern>
+    <radialGradient id="fl1" cx="210" cy="0" r="1050" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="rgba(210,255,190,0.22)"/>
+      <stop offset="55%"  stop-color="rgba(160,220,140,0.06)"/>
+      <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+    </radialGradient>
+    <radialGradient id="fl2" cx="1190" cy="0" r="1050" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="rgba(210,255,190,0.22)"/>
+      <stop offset="55%"  stop-color="rgba(160,220,140,0.06)"/>
+      <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+    </radialGradient>
+    <radialGradient id="cg" cx="700" cy="450" r="320" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="rgba(255,255,220,0.10)"/>
+      <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+    </radialGradient>
+    <radialGradient id="vig" cx="700" cy="450" r="740" gradientUnits="userSpaceOnUse">
+      <stop offset="38%"  stop-color="rgba(0,0,0,0)"/>
+      <stop offset="100%" stop-color="rgba(0,0,0,0.76)"/>
+    </radialGradient>
+  </defs>
+  <rect width="1400" height="900" fill="url(#mow)"/>
+  <g fill="none" stroke="rgba(255,255,255,0.40)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="60" y="60" width="1280" height="780"/>
+    <line x1="700" y1="60" x2="700" y2="840"/>
+    <circle cx="700" cy="450" r="110"/>
+    <rect x="60"   y="219" width="200" height="462"/>
+    <rect x="60"   y="345" width="67"  height="210"/>
+    <rect x="1140" y="219" width="200" height="462"/>
+    <rect x="1273" y="345" width="67"  height="210"/>
+    <path d="M 260 362 A 110 110 0 0 1 260 538"/>
+    <path d="M 1140 538 A 110 110 0 0 1 1140 362"/>
+    <path d="M 80 60   A 20 20 0 0 1 60 80"/>
+    <path d="M 1320 60 A 20 20 0 0 0 1340 80"/>
+    <path d="M 60 820  A 20 20 0 0 1 80 840"/>
+    <path d="M 1320 840 A 20 20 0 0 1 1340 820"/>
+    <rect x="16"   y="388" width="44" height="124" stroke="rgba(255,255,255,0.22)"/>
+    <rect x="1340" y="388" width="44" height="124" stroke="rgba(255,255,255,0.22)"/>
+  </g>
+  <g fill="rgba(255,255,255,0.40)">
+    <circle cx="700"  cy="450" r="5"/>
+    <circle cx="194"  cy="450" r="5"/>
+    <circle cx="1206" cy="450" r="5"/>
+  </g>
+  <rect width="1400" height="900" fill="url(#fl1)"/>
+  <rect width="1400" height="900" fill="url(#fl2)"/>
+  <rect width="1400" height="900" fill="url(#cg)"/>
+  <rect width="1400" height="900" fill="url(#vig)"/>
+</svg>
+
+<!-- Floating bonus numbers (filled by shared.js) -->
+<div class="bonus-layer" aria-hidden="true"></div>
+
+<!-- Mobile top bar -->
+<div class="mobile-topbar">
+  <a href="app.html" class="mobile-topbar-brand">
+    <img src="favicon.png" alt="" style="width:28px;height:28px;vertical-align:middle;"/>
+    <span class="mobile-topbar-title">FantaGiustiziere</span>
+  </a>
+  <button class="burger-btn" id="burgerBtn" aria-label="Menu" aria-expanded="false">☰</button>
+</div>
+<div class="mobile-menu" id="mobileMenu" hidden>
+  <a href="index.html"  class="nav-link">🏠 Home</a>
+  <a href="app.html"   class="nav-link active">⚡ Analisi</a>
+  <a href="info.html"    class="nav-link">📐 Come funziona</a>
+  <a href="about.html"   class="nav-link">🧩 Il Progetto</a>
+  <a href="support.html" class="nav-link">❤️ Supporta</a>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <a href="index.html"><img src="logo.png" alt="FantaGiustiziere" style="width:100%;max-width:220px;height:auto;display:block;margin:0 auto;padding:0.1rem 0.25rem 0.5rem;"/></a>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="index.html"  class="nav-link">🏠 Home</a>
+  <a href="app.html"   class="nav-link active">⚡ Analisi</a>
+      <a href="info.html"    class="nav-link">📐 Come funziona</a>
+      <a href="about.html"   class="nav-link">🧩 Il Progetto</a>
+      <a href="support.html" class="nav-link">❤️ Supporta</a>
+    </nav>
+    <div class="sidebar-footer">
+      FantaGiustiziere &copy; 2024<br>
+      <a href="about.html">Il Progetto</a> · <a href="support.html">Supporta</a>
+    </div>
+  </aside>
+
+  <main class="content">
+  <div class="content-inner">
+
+  <!-- Step indicator -->
+  <div class="steps-bar">
+    <div class="step-node active" id="sn1">
+      <div class="step-circle">1</div>
+      <div class="step-label">Carica</div>
+    </div>
+    <div class="step-connector" id="sc1"></div>
+    <div class="step-node" id="sn2">
+      <div class="step-circle">2</div>
+      <div class="step-label">Classifica</div>
+    </div>
+    <div class="step-connector" id="sc2"></div>
+    <div class="step-node" id="sn3">
+      <div class="step-circle">3</div>
+      <div class="step-label">Parametri</div>
+    </div>
+    <div class="step-connector" id="sc3"></div>
+    <div class="step-node" id="sn4">
+      <div class="step-circle">4</div>
+      <div class="step-label">Calcolo</div>
+    </div>
+    <div class="step-connector" id="sc4"></div>
+    <div class="step-node" id="sn5">
+      <div class="step-circle">5</div>
+      <div class="step-label">Risultati</div>
+    </div>
+  </div>
+
+  <!-- ── Step 1: Upload ───────────────────────────────────────────── -->
+  <div id="step1">
+
+  <!-- ── Quick guide ─────────────────────────────────────────────────── -->
+  <div class="card" style="margin-bottom:1.25rem;">
+    <div class="card-title">Come funziona</div>
+    <div class="guide-steps">
+      <div class="guide-step">
+        <div class="guide-num">1</div>
+        <div class="guide-text"><strong>Carica il file Excel</strong> esportato dalla tua piattaforma Fantacalcio — quello con i punteggi giornalieri di ogni squadra.</div>
+      </div>
+      <div class="guide-step">
+        <div class="guide-num">2</div>
+        <div class="guide-text"><strong>Configura i parametri</strong>: vantaggio casalingo, soglia e intervallo per il calcolo dei gol. L'app mostra subito la classifica effettiva, che puoi verificare sull'app fantacalcio.</div>
+      </div>
+      <div class="guide-step">
+        <div class="guide-num">3</div>
+        <div class="guide-text"><strong>Scegli la profondità</strong> di analisi: da mille permutazioni rapide fino al calcolo completo di tutti i calendari possibili.</div>
+      </div>
+      <div class="guide-step">
+        <div class="guide-num">4</div>
+        <div class="guide-text"><strong>Leggi i risultati</strong>: scopri in quante versioni del calendario avresti vinto — e in quante non c'era niente da fare.</div>
+      </div>
+    </div>
+  </div>
+
+    <div class="card">
+      <div class="card-title">Carica il file</div>
+      <div class="card-subtitle">Seleziona il file Excel esportato dalla tua lega Fantacalcio</div>
+
+      <div class="field">
+        <label>File risultati (.xlsx)</label>
+        <input type="file" id="fileInput" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel">
+      </div>
+
+      <div id="step1Error" class="error-box" hidden></div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btnAnalyze" disabled>Analizza file</button>
+      </div>
+
+      <div class="loading-overlay" id="step1Loading" hidden>
+        <div class="spinner"></div>
+        <div class="loading-text">Analisi del file in corso…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Step 2: Classifica ───────────────────────────────────────── -->
+  <div id="step2" hidden>
+    <div class="card">
+      <div class="card-title">Classifica effettiva</div>
+      <div class="card-subtitle">Classifica attuale della lega calcolata dal file caricato</div>
+
+      <div class="info-row">
+        <div class="info-item"><strong id="s2PlayerCount">—</strong>Giocatori</div>
+        <div class="info-item"><strong id="s2MatchdayCount">—</strong>Giornate</div>
+      </div>
+
+      <div id="s2IncompleteWarning" class="warning-box" hidden></div>
+
+      <div class="standings-wrap">
+        <table id="standingsTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th class="col-name">Giocatore</th>
+              <th title="Partite giocate">PG</th>
+              <th title="Vinte">V</th>
+              <th title="Nulle">N</th>
+              <th title="Perse">P</th>
+              <th title="Gol fatti">G+</th>
+              <th title="Gol subiti">G-</th>
+              <th title="Differenza reti">DR</th>
+              <th title="Punti classifica">Pti</th>
+              <th title="Punteggio totale fantacalcio">Punteggio</th>
+            </tr>
+          </thead>
+          <tbody id="standingsBody"></tbody>
+        </table>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-secondary" id="btnBackTo1">← Indietro</button>
+        <button class="btn btn-primary" id="btnGoTo3">Continua →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Step 3: Parametri lega ───────────────────────────────────── -->
+  <div id="step3" hidden>
+    <div class="card">
+      <div class="card-title">Parametri lega</div>
+      <div class="card-subtitle">Configura il vantaggio campo e le soglie per il calcolo dei gol</div>
+
+      <div class="field">
+        <label>Vantaggio campo casa <small>(punti aggiunti al punteggio della squadra di casa)</small></label>
+        <input type="number" id="settingHome" value="2" min="0" max="10" step="0.5">
+      </div>
+
+      <div class="field">
+        <label>Soglia gol <small>(punteggio minimo per segnare 1 gol — default 66)</small></label>
+        <input type="number" id="settingGoalLimit" value="66" min="66" max="200" step="1">
+      </div>
+
+      <div class="field">
+        <label>Intervallo gol <small>(punti per ogni gol aggiuntivo — default 6)</small></label>
+        <input type="number" id="settingGoalOffset" value="6" min="1" max="50" step="1">
+      </div>
+
+      <div id="step3Error" class="error-box" hidden></div>
+
+      <div class="btn-row">
+        <button class="btn btn-secondary" id="btnBackTo2">← Indietro</button>
+        <button class="btn btn-primary" id="btnGoTo4">Continua →</button>
+      </div>
+
+      <div class="loading-overlay" id="step3Loading" hidden>
+        <div class="spinner"></div>
+        <div class="loading-text">Validazione in corso…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Step 4: Computation settings ────────────────────────────── -->
+  <div id="step4" hidden>
+    <div class="card">
+      <div class="card-title">Impostazioni calcolo</div>
+      <div class="card-subtitle">Scegli quante permutazioni del calendario vuoi analizzare</div>
+
+      <div class="field">
+        <label>Profondità di analisi</label>
+        <p id="coverageInfo" class="coverage-info"></p>
+        <div id="settingCoverage" class="coverage-grid"></div>
+      </div>
+
+      <div id="step4Error" class="error-box" hidden></div>
+
+      <div class="btn-row">
+        <button class="btn btn-secondary" id="btnBackTo3">← Indietro</button>
+        <button class="btn btn-primary" id="btnRun">Avvia calcolo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Step 5: Results (tabbed) ─────────────────────────────────── -->
+  <div id="step5" hidden>
+    <div class="card">
+
+      <!-- Tab bar -->
+      <div class="tab-bar">
+        <button class="tab-btn active" id="tab4Btn">🏆 Classifica effettiva</button>
+        <button class="tab-btn"        id="tab1Btn">📊 Classifica simulata</button>
+        <button class="tab-btn"        id="tab2Btn">🔁 Calendario inverso</button>
+        <button class="tab-btn"        id="tab3Btn">📈 Analisi permutazioni</button>
+      </div>
+
+      <!-- ── Tab 1: live standings simulator ──────────────────────── -->
+      <div id="tab1Content" hidden>
+        <div class="card-subtitle">Trascina il cursore per vedere come cambia la classifica al variare del vantaggio campo</div>
+
+        <div class="ha-slider-wrap">
+          <div class="ha-slider-header">
+            <span class="ha-slider-label">Vantaggio campo casa</span>
+            <span class="ha-value-display" id="haDisplay">2.0<span>pt</span></span>
+          </div>
+          <input type="range" id="haSlider" min="0" max="10" step="0.5" value="2">
+          <div class="ha-minmax"><span>0 pt</span><span>5 pt</span><span>10 pt</span></div>
+          <div class="ha-configured-note">
+            Valore configurato per il calcolo: <strong id="haConfiguredNote">2.0 pt</strong>
+          </div>
+        </div>
+
+        <div class="standings-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th class="col-name">Giocatore</th>
+                <th title="Partite giocate">PG</th>
+                <th title="Vinte">V</th>
+                <th title="Nulle">N</th>
+                <th title="Perse">P</th>
+                <th title="Gol fatti">G+</th>
+                <th title="Gol subiti">G-</th>
+                <th title="Differenza reti">DR</th>
+                <th title="Punti classifica">Pti</th>
+                <th title="Punteggio totale fantacalcio">Punteggio</th>
+              </tr>
+            </thead>
+            <tbody id="simStandingsBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── Tab 2: reverse calendar ──────────────────────────────── -->
+      <div id="tab2Content" hidden>
+        <div class="card-subtitle">Come sarebbe andata con il calendario specchiato: stesse partite, ma casa e trasferta invertite. Il vantaggio campo usato è quello configurato (non varia con il cursore).</div>
+
+        <div class="standings-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th class="col-name">Giocatore</th>
+                <th title="Partite giocate">PG</th>
+                <th title="Vinte">V</th>
+                <th title="Nulle">N</th>
+                <th title="Perse">P</th>
+                <th title="Gol fatti">G+</th>
+                <th title="Gol subiti">G-</th>
+                <th title="Differenza reti">DR</th>
+                <th title="Punti classifica">Pti</th>
+                <th title="Punteggio totale fantacalcio">Punteggio</th>
+              </tr>
+            </thead>
+            <tbody id="revStandingsBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── Tab 3: permutation results ───────────────────────────── -->
+      <div id="tab3Content" hidden>
+
+        <!-- Spinner while job is running -->
+        <div id="step5Spinner" class="inline-spinner-wrap">
+          <div class="spinner"></div>
+          <div class="loading-text">
+            Calcolo permutazioni in corso…<br>
+            <span id="progressText" style="font-size:0.78rem;color:#475569">In attesa di avvio…</span>
+          </div>
+        </div>
+
+        <!-- Results (shown when /run completes) -->
+        <div id="step5Results" hidden>
+          <div class="meta-row">
+            <div>Permutazioni calcolate: <strong id="permCount">—</strong></div>
+            <div>Giocatori: <strong id="resultPlayerCount">—</strong></div>
+          </div>
+          <div class="table-wrap">
+            <table id="statsTable"></table>
+          </div>
+        </div>
+
+        <div id="step5Error" class="error-box" hidden></div>
+      </div>
+
+      <!-- ── Tab 4: actual standings from file ─────────────────────── -->
+      <div id="tab4Content">
+        <div class="card-subtitle">Classifica reale calcolata dal file caricato. Scorri i tab per vedere le simulazioni: classifica con vantaggio campo variabile, calendario invertito, e analisi statistica su tutte le permutazioni possibili.</div>
+        <div class="standings-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th class="col-name">Giocatore</th>
+                <th title="Partite giocate">PG</th>
+                <th title="Vinte">V</th>
+                <th title="Nulle">N</th>
+                <th title="Perse">P</th>
+                <th title="Gol fatti">G+</th>
+                <th title="Gol subiti">G-</th>
+                <th title="Differenza reti">DR</th>
+                <th title="Punti classifica">Pti</th>
+                <th title="Punteggio totale fantacalcio">Punteggio</th>
+              </tr>
+            </thead>
+            <tbody id="actualStandingsBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Restart always visible at the bottom -->
+      <div class="btn-row">
+        <button class="btn btn-secondary" id="btnRestart">↺ Ricomincia</button>
+      </div>
+    </div>
+  </div>
+
+  </div><!-- /.content-inner -->
+  </main>
+</div><!-- /.layout -->
+
+<script>
+  // ── State ────────────────────────────────────────────────────────────────
+  const state = {
+    token: null,
+    playerCount: 0,
+    matchdayCount: 0,
+    homeAdvantage: 2,
+    goalLimit: 66,
+    goalOffset: 6,
+    matches: [],
+    standings: [],
+  };
+
+  // ── Step navigation ──────────────────────────────────────────────────────
+  function goTo(step) {
+    [1, 2, 3, 4, 5].forEach(i => {
+      document.getElementById('step' + i).hidden = (i !== step);
+      const node = document.getElementById('sn' + i);
+      node.classList.toggle('active', i === step);
+      node.classList.toggle('done', i < step);
+    });
+    [1, 2, 3, 4].forEach(i => {
+      document.getElementById('sc' + i).classList.toggle('done', i < step);
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ── Tab switching (step 5) ───────────────────────────────────────────────
+  function switchTab(n) {
+    [1, 2, 3, 4].forEach(i => {
+      document.getElementById('tab' + i + 'Content').hidden = (i !== n);
+      document.getElementById('tab' + i + 'Btn').classList.toggle('active', i === n);
+    });
+    if (n === 4) renderStandings(state.standings, 'actualStandingsBody');
+  }
+  document.getElementById('tab1Btn').addEventListener('click', () => switchTab(1));
+  document.getElementById('tab2Btn').addEventListener('click', () => switchTab(2));
+  document.getElementById('tab3Btn').addEventListener('click', () => switchTab(3));
+  document.getElementById('tab4Btn').addEventListener('click', () => switchTab(4));
+
+  // ── Step 1: file selection & parse ──────────────────────────────────────
+  const fileInput    = document.getElementById('fileInput');
+  const btnAnalyze   = document.getElementById('btnAnalyze');
+  const step1Loading = document.getElementById('step1Loading');
+  const step1Error   = document.getElementById('step1Error');
+
+  fileInput.addEventListener('change', () => {
+    btnAnalyze.disabled = !fileInput.files.length;
+    step1Error.hidden = true;
+  });
+
+  btnAnalyze.addEventListener('click', async () => {
+    step1Error.hidden = true;
+    step1Loading.hidden = false;
+    btnAnalyze.disabled = true;
+
+    try {
+      const fd = new FormData();
+      fd.append('file', fileInput.files[0]);
+      const resp = await fetch('/parse', { method: 'POST', body: fd });
+      if (!resp.ok) throw new Error(await resp.text() || `Errore HTTP ${resp.status}`);
+      const body = await resp.json();
+
+      state.token         = body.token;
+      state.playerCount   = body.playerCount;
+      state.matchdayCount = body.matchdayCount;
+      state.matches       = body.matches || [];
+      state.standings     = body.standings || [];
+
+      document.getElementById('s2PlayerCount').textContent   = body.playerCount;
+      document.getElementById('s2MatchdayCount').textContent = body.matchdayCount;
+
+      const incompleteWarn = document.getElementById('s2IncompleteWarning');
+      if (body.incompleteMatchdays > 0) {
+        const played = body.matchdayCount - body.incompleteMatchdays;
+        incompleteWarn.textContent = `⚠️ Calendario incompleto: ${played} giornate su ${body.matchdayCount} sono state giocate. Le ultime ${body.incompleteMatchdays} giornate hanno punteggi a zero e saranno conteggiate come pareggi (0-0).`;
+        incompleteWarn.hidden = false;
+      } else {
+        incompleteWarn.hidden = true;
+      }
+
+      renderStandings(body.standings);
+
+      goTo(2);
+    } catch (err) {
+      step1Error.textContent = 'Errore: ' + err.message;
+      step1Error.hidden = false;
+    } finally {
+      step1Loading.hidden = true;
+      btnAnalyze.disabled = false;
+    }
+  });
+
+  // ── Step 2: classifica ──────────────────────────────────────────────────
+  document.getElementById('btnBackTo1').addEventListener('click', () => {
+    fileInput.value = '';
+    btnAnalyze.disabled = true;
+    step1Error.hidden = true;
+    goTo(1);
+  });
+
+  document.getElementById('btnGoTo3').addEventListener('click', () => { goTo(3); });
+
+  // ── Step 3: parametri ───────────────────────────────────────────────────
+  const step3Loading = document.getElementById('step3Loading');
+  const step3Error   = document.getElementById('step3Error');
+  const btnGoTo4     = document.getElementById('btnGoTo4');
+  const settingHome  = document.getElementById('settingHome');
+
+  document.getElementById('btnBackTo2').addEventListener('click', () => {
+    step3Error.hidden = true;
+    goTo(2);
+  });
+
+  btnGoTo4.addEventListener('click', async () => {
+    step3Error.hidden = true;
+    step3Loading.hidden = false;
+    btnGoTo4.disabled = true;
+
+    try {
+      const body = new URLSearchParams({
+        token:         state.token,
+        homeAdvantage: settingHome.value,
+        goalLimit:     document.getElementById('settingGoalLimit').value,
+        goalOffset:    document.getElementById('settingGoalOffset').value,
+      });
+      const resp = await fetch('/validate', { method: 'POST', body });
+      if (!resp.ok) throw new Error(await resp.text() || `Errore HTTP ${resp.status}`);
+
+      state.homeAdvantage = parseFloat(settingHome.value);
+      state.goalLimit     = parseInt(document.getElementById('settingGoalLimit').value,  10);
+      state.goalOffset    = parseInt(document.getElementById('settingGoalOffset').value, 10);
+      goTo(4);
+      populateCoverageSelect();
+    } catch (err) {
+      step3Error.textContent = 'Errore di validazione: ' + err.message;
+      step3Error.hidden = false;
+    } finally {
+      step3Loading.hidden = true;
+      btnGoTo4.disabled = false;
+    }
+  });
+
+  // ── Coverage tier helpers ────────────────────────────────────────────────
+  function factorial(n) {
+    let r = 1;
+    for (let i = 2; i <= n; i++) r *= i;
+    return r;
+  }
+
+  function populateCoverageSelect() {
+    const n     = state.playerCount;
+    const total = factorial(n);
+    const fmtN  = v => v.toLocaleString('it-IT');
+    const grid  = document.getElementById('settingCoverage');
+    const info  = document.getElementById('coverageInfo');
+
+    info.textContent =
+      `Per la tua lega da ${n} giocatori, il numero totale di permutazioni è ${fmtN(total)}.`;
+
+    const fixed = [
+      { name: 'Rapido',       limit: 1000,   hint: '< 1s',    slow: false },
+      { name: 'Bilanciato',   limit: 10000,  hint: '~5–10s',  slow: false },
+      { name: 'Approfondito', limit: 100000, hint: '~30–60s', slow: false },
+    ];
+    const completeHint = n >= 11 ? '⚠ potrebbe richiedere ore'
+                        : n >= 9  ? '~qualche minuto'
+                        :           '~pochi secondi';
+
+    const tiers = fixed
+      .filter(t => t.limit < total)
+      .map(t => ({ name: t.name, limit: t.limit, hint: t.hint, slow: false }));
+
+    tiers.push({ name: 'Completo', limit: -1, hint: completeHint, slow: n >= 11 });
+
+    const defaultIdx = Math.min(1, tiers.length - 1);
+    grid.innerHTML = tiers.map((t, i) => {
+      const countLabel = t.limit === -1 ? fmtN(total) : fmtN(t.limit);
+      const hintClass  = t.slow ? 'coverage-hint slow' : 'coverage-hint';
+      return `<label class="coverage-row">
+        <input type="radio" name="coverage" value="${t.limit}"${i === defaultIdx ? ' checked' : ''}>
+        <span class="coverage-name">${t.name}</span>
+        <span class="coverage-count">${countLabel} perm</span>
+        <span class="${hintClass}">${t.hint}</span>
+      </label>`;
+    }).join('');
+  }
+
+  // ── Step 4: run ──────────────────────────────────────────────────────────
+  const step4Error = document.getElementById('step4Error');
+  const btnRun     = document.getElementById('btnRun');
+
+  document.getElementById('btnBackTo3').addEventListener('click', () => {
+    step4Error.hidden = true;
+    goTo(3);
+  });
+
+  let pollInterval = null;
+  function stopPolling() {
+    if (pollInterval !== null) { clearInterval(pollInterval); pollInterval = null; }
+  }
+  function showRunError(msg) {
+    document.getElementById('step5Spinner').hidden = true;
+    document.getElementById('step5Error').textContent = 'Errore nel calcolo: ' + msg;
+    document.getElementById('step5Error').hidden = false;
+    document.getElementById('tab3Btn').innerHTML =
+      '📈 Analisi permutazioni <span class="tab-badge" style="background:#7f1d1d;color:#fca5a5">errore</span>';
+  }
+
+  btnRun.addEventListener('click', async () => {
+    step4Error.hidden = true;
+    btnRun.disabled = true;
+    stopPolling();
+
+    const ha = state.homeAdvantage;
+    const haSlider = document.getElementById('haSlider');
+    haSlider.value = ha;
+    updateSliderTrack(haSlider);
+    document.getElementById('haDisplay').innerHTML = ha.toFixed(1) + '<span>pt</span>';
+    document.getElementById('haConfiguredNote').textContent = ha.toFixed(1) + ' pt';
+    renderSimulatedStandings(computeSimulatedStandings(state.matches, ha, state.goalLimit, state.goalOffset));
+    renderReverseStandings(computeReverseStandings(state.matches, ha, state.goalLimit, state.goalOffset));
+
+    document.getElementById('step5Spinner').hidden  = false;
+    document.getElementById('step5Results').hidden  = true;
+    document.getElementById('step5Error').hidden    = true;
+    document.getElementById('tab3Btn').innerHTML    = '📈 Analisi permutazioni';
+    document.getElementById('progressText').textContent = 'In attesa di avvio…';
+    switchTab(4);
+    goTo(5);
+
+    let jobId;
+    try {
+      const body = new URLSearchParams({
+        token:            state.token,
+        homeAdvantage:    state.homeAdvantage,
+        goalLimit:        state.goalLimit,
+        goalOffset:       state.goalOffset,
+        threads:          -1,
+        permutationLimit: document.querySelector('input[name="coverage"]:checked').value,
+      });
+      const resp = await fetch('/run', { method: 'POST', body });
+      if (!resp.ok) { showRunError(await resp.text() || `Errore HTTP ${resp.status}`); return; }
+      jobId = (await resp.json()).jobId;
+    } catch (err) {
+      showRunError('Errore di rete: ' + err.message);
+      return;
+    }
+
+    pollInterval = setInterval(async () => {
+      try {
+        const resp = await fetch('/status/' + jobId);
+        if (!resp.ok) { stopPolling(); showRunError(`Errore stato: HTTP ${resp.status}`); return; }
+        const data = await resp.json();
+
+        const elapsed   = (data.elapsedMs / 1000).toFixed(0);
+        const limit     = parseInt(document.querySelector('input[name="coverage"]:checked').value, 10);
+        const total     = limit > 0 ? limit : factorial(state.playerCount);
+        const pct       = total > 0 ? Math.min(100, (data.processed / total * 100)).toFixed(1) : '…';
+        document.getElementById('progressText').textContent =
+          `Elaborate: ${data.processed.toLocaleString('it-IT')} permutazioni (${pct}%) in ${elapsed}s`;
+
+        if (data.status === 'DONE') {
+          stopPolling();
+          renderResults(data.result);
+          document.getElementById('step5Spinner').hidden = true;
+          document.getElementById('step5Results').hidden = false;
+          document.getElementById('tab3Btn').innerHTML =
+            '📈 Analisi permutazioni <span class="tab-badge">pronto</span>';
+        } else if (data.status === 'ERROR') {
+          stopPolling();
+          showRunError(data.error || 'Errore sconosciuto nel calcolo');
+        }
+      } catch (_) {
+        // network hiccup — keep polling silently
+      }
+    }, 2000);
+  });
+
+  // ── HA Slider ────────────────────────────────────────────────────────────
+  const haSliderEl = document.getElementById('haSlider');
+
+  haSliderEl.addEventListener('input', () => {
+    const ha = parseFloat(haSliderEl.value);
+    updateSliderTrack(haSliderEl);
+    document.getElementById('haDisplay').innerHTML = ha.toFixed(1) + '<span>pt</span>';
+    renderSimulatedStandings(computeSimulatedStandings(state.matches, ha, state.goalLimit, state.goalOffset));
+  });
+
+  function updateSliderTrack(slider) {
+    const pct = ((slider.value - slider.min) / (slider.max - slider.min)) * 100;
+    slider.style.background =
+      `linear-gradient(to right, #f7c948 ${pct}%, #1e293b ${pct}%)`;
+  }
+
+  // ── Step 5: restart ──────────────────────────────────────────────────────
+  document.getElementById('btnRestart').addEventListener('click', () => {
+    stopPolling();
+    fileInput.value = '';
+    btnAnalyze.disabled = true;
+    step1Error.hidden = true;
+    btnRun.disabled = false;
+    goTo(1);
+  });
+
+  // ── Client-side standings simulation ─────────────────────────────────────
+  function getGoals(score, goalLimit, goalOffset) {
+    if (score < goalLimit) return 0;
+    return 1 + Math.floor((score - goalLimit) / goalOffset);
+  }
+
+  function computeSimulatedStandings(matches, ha, goalLimit, goalOffset) {
+    const origHA = state.homeAdvantage;
+    const p = {};
+    function init(name) {
+      if (!p[name]) p[name] = { player: name, points: 0, won: 0, drawn: 0, lost: 0,
+                                 goalsFor: 0, goalsAgainst: 0, totalScore: 0 };
+    }
+    for (const m of matches) {
+      init(m.homePlayer);
+      init(m.awayPlayer);
+      p[m.homePlayer].totalScore += m.homeScore;
+      p[m.awayPlayer].totalScore += m.awayScore;
+
+      const effectiveHome = m.neutral ? m.homeScore : (m.homeScore - origHA + ha);
+      const hg = getGoals(effectiveHome, goalLimit, goalOffset);
+      const ag = getGoals(m.awayScore,   goalLimit, goalOffset);
+
+      p[m.homePlayer].goalsFor     += hg;  p[m.homePlayer].goalsAgainst += ag;
+      p[m.awayPlayer].goalsFor     += ag;  p[m.awayPlayer].goalsAgainst += hg;
+
+      if (hg > ag) {
+        p[m.homePlayer].points += 3; p[m.homePlayer].won++;  p[m.awayPlayer].lost++;
+      } else if (hg < ag) {
+        p[m.awayPlayer].points += 3; p[m.awayPlayer].won++;  p[m.homePlayer].lost++;
+      } else {
+        p[m.homePlayer].points++;    p[m.homePlayer].drawn++;
+        p[m.awayPlayer].points++;    p[m.awayPlayer].drawn++;
+      }
+    }
+    return Object.values(p).sort((a, b) => {
+      if (b.points !== a.points) return b.points - a.points;
+      const adr = a.goalsFor - a.goalsAgainst, bdr = b.goalsFor - b.goalsAgainst;
+      if (bdr !== adr) return bdr - adr;
+      return b.totalScore - a.totalScore;
+    });
+  }
+
+  function computeReverseStandings(matches, ha, goalLimit, goalOffset) {
+    const origHA = state.homeAdvantage;
+    const p = {};
+    function init(name) {
+      if (!p[name]) p[name] = { player: name, points: 0, won: 0, drawn: 0, lost: 0,
+                                 goalsFor: 0, goalsAgainst: 0, totalScore: 0 };
+    }
+    for (const m of matches) {
+      init(m.homePlayer);
+      init(m.awayPlayer);
+      p[m.homePlayer].totalScore += m.homeScore;
+      p[m.awayPlayer].totalScore += m.awayScore;
+
+      const effectiveNewHome = m.neutral ? m.awayScore : (m.awayScore + ha);
+      const effectiveNewAway = m.neutral ? m.homeScore : (m.homeScore - origHA);
+
+      const hg = getGoals(effectiveNewHome, goalLimit, goalOffset);
+      const ag = getGoals(effectiveNewAway, goalLimit, goalOffset);
+
+      p[m.awayPlayer].goalsFor     += hg;  p[m.awayPlayer].goalsAgainst += ag;
+      p[m.homePlayer].goalsFor     += ag;  p[m.homePlayer].goalsAgainst += hg;
+
+      if (hg > ag) {
+        p[m.awayPlayer].points += 3; p[m.awayPlayer].won++;  p[m.homePlayer].lost++;
+      } else if (hg < ag) {
+        p[m.homePlayer].points += 3; p[m.homePlayer].won++;  p[m.awayPlayer].lost++;
+      } else {
+        p[m.awayPlayer].points++;    p[m.awayPlayer].drawn++;
+        p[m.homePlayer].points++;    p[m.homePlayer].drawn++;
+      }
+    }
+    return Object.values(p).sort((a, b) => {
+      if (b.points !== a.points) return b.points - a.points;
+      const adr = a.goalsFor - a.goalsAgainst, bdr = b.goalsFor - b.goalsAgainst;
+      if (bdr !== adr) return bdr - adr;
+      return b.totalScore - a.totalScore;
+    });
+  }
+
+  function renderReverseStandings(rows) {
+    document.getElementById('revStandingsBody').innerHTML = rows.map((s, i) => {
+      const dr      = s.goalsFor - s.goalsAgainst;
+      const drClass = dr > 0 ? 'col-dr-pos' : dr < 0 ? 'col-dr-neg' : '';
+      const drText  = (dr > 0 ? '+' : '') + dr;
+      const played  = s.won + s.drawn + s.lost;
+      return `<tr>
+        <td class="col-rank">${i + 1}</td>
+        <td class="col-name">${esc(s.player)}</td>
+        <td>${played}</td><td>${s.won}</td><td>${s.drawn}</td><td>${s.lost}</td>
+        <td>${s.goalsFor}</td><td>${s.goalsAgainst}</td>
+        <td class="${drClass}">${drText}</td>
+        <td class="col-pts">${s.points}</td>
+        <td>${s.totalScore.toLocaleString('it-IT', {maximumFractionDigits: 1})}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  function renderSimulatedStandings(rows) {
+    document.getElementById('simStandingsBody').innerHTML = rows.map((s, i) => {
+      const dr      = s.goalsFor - s.goalsAgainst;
+      const drClass = dr > 0 ? 'col-dr-pos' : dr < 0 ? 'col-dr-neg' : '';
+      const drText  = (dr > 0 ? '+' : '') + dr;
+      const played  = s.won + s.drawn + s.lost;
+      return `<tr>
+        <td class="col-rank">${i + 1}</td>
+        <td class="col-name">${esc(s.player)}</td>
+        <td>${played}</td><td>${s.won}</td><td>${s.drawn}</td><td>${s.lost}</td>
+        <td>${s.goalsFor}</td><td>${s.goalsAgainst}</td>
+        <td class="${drClass}">${drText}</td>
+        <td class="col-pts">${s.points}</td>
+        <td>${s.totalScore.toLocaleString('it-IT', {maximumFractionDigits: 1})}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  function renderStandings(rows, tbodyId = 'standingsBody') {
+    const tbody = document.getElementById(tbodyId);
+    tbody.innerHTML = (rows || []).map((s, i) => {
+      const drClass = s.goalDiff > 0 ? 'col-dr-pos' : s.goalDiff < 0 ? 'col-dr-neg' : '';
+      const drText  = (s.goalDiff > 0 ? '+' : '') + s.goalDiff;
+      return `<tr>
+        <td class="col-rank">${i + 1}</td>
+        <td class="col-name">${esc(s.player)}</td>
+        <td>${s.played}</td><td>${s.won}</td><td>${s.drawn}</td><td>${s.lost}</td>
+        <td>${s.goalsFor}</td><td>${s.goalsAgainst}</td>
+        <td class="${drClass}">${drText}</td>
+        <td class="col-pts">${s.points}</td>
+        <td>${s.totalScore.toLocaleString('it-IT', {maximumFractionDigits: 1})}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  function renderResults(data) {
+    document.getElementById('permCount').textContent         = data.permutationCount.toLocaleString('it-IT');
+    document.getElementById('resultPlayerCount').textContent = data.statistics.length;
+
+    const n = data.statistics[0]?.positions.length ?? 0;
+    let html = '<thead><tr><th class="col-name">Giocatore</th>';
+    for (let i = 0; i < n; i++) html += `<th>${i + 1}°</th>`;
+    html += '<th class="col-total" title="Permutazioni totali analizzate per questo giocatore">Totale</th>';
+    html += '</tr></thead><tbody>';
+
+    for (const s of data.statistics) {
+      const total = s.positions.reduce((a, b) => a + b, 0);
+      html += `<tr><td class="col-name">${esc(s.player)}</td>`;
+      for (let i = 0; i < n; i++) {
+        const pct   = s.percentages[i];
+        const count = s.positions[i];
+        const cls   = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : 'rank-other';
+        html += `<td title="${count.toLocaleString('it-IT')} permutazioni">` +
+                `<span class="pos-cell ${cls}">${pct}%` +
+                `<span class="pct-bar">${count.toLocaleString('it-IT')}</span></span></td>`;
+      }
+      html += `<td class="col-total-val">${total.toLocaleString('it-IT')}</td>`;
+      html += '</tr>';
+    }
+    html += '</tbody>';
+    document.getElementById('statsTable').innerHTML = html;
+  }
+
+  function esc(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+</script>
+<script src="shared.js"></script>
+</body>
+</html>

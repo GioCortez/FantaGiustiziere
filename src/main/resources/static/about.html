@@ -50,6 +50,43 @@
     .step-text { font-size: 0.855rem; color: #94a3b8; line-height: 1.6; }
     .step-text strong { color: #e2e8f0; }
 
+    /* ── Fusion identity ─────────────────────────────────────────────── */
+    .fusion-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      margin: 0 0 1.1rem;
+    }
+    .fusion-chip {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      padding: 0.6rem 1.1rem;
+      background: rgba(5,8,15,0.7);
+      border: 1px solid rgba(255,255,255,0.1);
+      font-size: 0.88rem; font-weight: 700; color: #e2e8f0;
+    }
+    .fusion-chip:first-child {
+      border-radius: 8px 0 0 8px;
+      border-right: none;
+    }
+    .fusion-chip:last-child {
+      border-radius: 0 8px 8px 0;
+      border-left: none;
+    }
+    .fusion-sep {
+      width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(247,201,72,0.12);
+      border-top: 1px solid rgba(247,201,72,0.35);
+      border-bottom: 1px solid rgba(247,201,72,0.35);
+      color: #f7c948; font-size: 0.85rem; font-weight: 700;
+      flex-shrink: 0;
+      z-index: 1;
+    }
+    .fusion-chip .fi { font-size: 1.2rem; }
+
     /* ── CTA card ────────────────────────────────────────────────────── */
     .cta-card {
       text-align: center;
@@ -140,7 +177,7 @@
 <div class="layout">
   <aside class="sidebar">
     <div class="sidebar-brand">
-      <img src="logo.png" alt="FantaGiustiziere" style="width:100%;max-width:220px;height:auto;display:block;margin:0 auto;padding:0.1rem 0.25rem 0.5rem;"/>
+      <a href="index.html"><img src="logo.png" alt="FantaGiustiziere" style="width:100%;max-width:220px;height:auto;display:block;margin:0 auto;padding:0.1rem 0.25rem 0.5rem;"/></a>
     </div>
     <nav class="sidebar-nav">
       <a href="index.html"  class="nav-link">🏠 Home</a>
@@ -180,47 +217,29 @@
     </p>
   </div>
 
-  <!-- ── How it works (quick) ──────────────────────────────────────── -->
+  <!-- ── Personal ─────────────────────────────────────────────────── -->
   <div class="card">
-    <div class="section-label">Come funziona — in breve</div>
-    <h2>Quattro passi per scoprire la verità sul tuo calendario</h2>
-
-    <div class="step-list">
-      <div class="step-item">
-        <div class="step-num">1</div>
-        <div class="step-text">
-          <strong>Carica il file Excel</strong> della tua lega — quello esportato dalla piattaforma
-          con i punteggi di ogni giornata per ogni giocatore.
-        </div>
+    <div class="section-label">Il mio background</div>
+    <div class="tech-grid" style="margin-bottom:1rem;">
+      <div class="tech-chip">
+        <span class="tech-icon">⚽</span>
+        <span class="tech-name">Fantallenatore</span>
       </div>
-      <div class="step-item">
-        <div class="step-num">2</div>
-        <div class="step-text">
-          <strong>Configura i parametri</strong>: vantaggio casalingo, soglia e intervallo per il calcolo
-          dei gol. L'app mostra subito la classifica attuale.
-        </div>
-      </div>
-      <div class="step-item">
-        <div class="step-num">3</div>
-        <div class="step-text">
-          <strong>Scegli la profondità</strong> di analisi: da mille permutazioni rapide fino al
-          calcolo completo di tutti i calendari possibili.
-        </div>
-      </div>
-      <div class="step-item">
-        <div class="step-num">4</div>
-        <div class="step-text">
-          <strong>Leggi i risultati</strong>: quante volte ogni giocatore avrebbe vinto con un
-          calendario diverso, con uno slider per simulare diversi valori di vantaggio casalingo.
-        </div>
+      <div class="tech-chip">
+        <span class="tech-icon">💻</span>
+        <span class="tech-name">Programmatore</span>
       </div>
     </div>
-
-    <div class="highlight">
-      Vuoi capire la matematica dietro? La pagina
-      <strong><a href="info.html" style="color:#f7c948;text-decoration:none">📐 Come funziona</a></strong>
-      spiega l'algoritmo di Heap, l'algoritmo di Berger e la combinatoria del fattoriale.
-    </div>
+    <p>
+      Sono uno sviluppatore software con la passione per il Fantacalcio — due mondi che raramente
+      si incontrano, ma che in questo progetto si fondono perfettamente. Da un lato, anni di
+      esperienza nella scrittura di codice; dall'altro, troppe stagioni perse a litigare sul calendario.
+    </p>
+    <p>
+      FantaGiustiziere è nato esattamente dall'intersezione di questi due mondi: un problema
+      concreto vissuto da fantallenatore, risolto con gli strumenti del programmatore.
+      È un progetto personale, costruito nel tempo libero, <strong>senza nessuno scopo commerciale</strong>.
+    </p>
   </div>
 
   <!-- ── Tech stack ─────────────────────────────────────────────────── -->
